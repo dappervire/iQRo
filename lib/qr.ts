@@ -42,3 +42,11 @@ export function buatOpsiQr(
     backgroundOptions: { color: state.warnaLatar },
   };
 }
+
+// QR sebagai gambar jadi untuk digambar ke canvas template. Library dimuat dinamis (hanya di browser).
+// Pemanggil wajib .close() hasilnya setelah dipakai supaya memori dibebaskan.
+export async function buatGambarQr(state: State, data: string, sisiPx: number): Promise<ImageBitmap | null> {
+  const { default: QRCodeStyling } = await import("qr-code-styling");
+  const blob = await new QRCodeStyling(buatOpsiQr(state, data, sisiPx)).getRawData("png");
+  return blob instanceof Blob ? createImageBitmap(blob) : null;
+}

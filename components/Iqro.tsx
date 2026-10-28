@@ -5,24 +5,22 @@ import { reducer, stateAwal } from "@/lib/state";
 import { normalisasiUrl } from "@/lib/validasi";
 import GayaQr from "./GayaQr";
 import LangkahLink from "./LangkahLink";
+import PilihTema from "./PilihTema";
 import PilihTemplate from "./PilihTemplate";
 import PreviewQr from "./PreviewQr";
 import PreviewTemplate from "./PreviewTemplate";
+import TombolUnduh from "./TombolUnduh";
 import UnggahLogo from "./UnggahLogo";
 
 type LangkahProps = {
-  nomor: string;
   judul: string;
   children: ReactNode;
 };
 
-function Langkah({ nomor, judul, children }: LangkahProps) {
+function Langkah({ judul, children }: LangkahProps) {
   return (
-    <section className="p-5 sm:p-6">
-      <h2 className="mb-4 flex items-baseline gap-3">
-        <span className="font-mono text-3xl font-medium leading-none text-biru">{nomor}</span>
-        <span className="text-lg font-semibold">{judul}</span>
-      </h2>
+    <section className="rounded-md bg-permukaan p-5 sm:p-6">
+      <h2 className="mb-6 text-lg font-semibold">{judul}</h2>
       {children}
     </section>
   );
@@ -35,16 +33,20 @@ export default function Iqro() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 lg:py-10">
-      <header className="mb-6 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-garis pb-4">
-        <h1 className="text-2xl font-extrabold tracking-tight">
-          iQRo<span className="sr-only"> — QR siap baca, siap cetak</span>
-        </h1>
-        <p className="text-sm text-teks-redup">QR siap baca, siap cetak.</p>
+      <header className="mb-6 flex items-center justify-between gap-4 border-b border-garis pb-4">
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <h1 className="text-2xl font-extrabold tracking-tight">
+            iQRo<span className="sr-only"> — QR siap baca, siap cetak</span>
+          </h1>
+          <p className="text-sm text-teks-redup">QR siap baca, siap cetak.</p>
+        </div>
+        <PilihTema />
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px] lg:items-start">
-        <div className="divide-y divide-garis rounded-md border border-garis bg-permukaan">
-          <Langkah nomor="01" judul="· Link">
+        {/* Tiap langkah panel sendiri, dipisah jarak (bukan garis). */}
+        <div className="space-y-4">
+          <Langkah judul="Link">
             <LangkahLink
               url={state.url}
               error={state.urlError}
@@ -53,7 +55,7 @@ export default function Iqro() {
             />
           </Langkah>
 
-          <Langkah nomor="02" judul="· Gaya QR">
+          <Langkah judul="Gaya QR">
             <GayaQr
               warnaQr={state.warnaQr}
               warnaLatar={state.warnaLatar}
@@ -74,7 +76,7 @@ export default function Iqro() {
             </div>
           </Langkah>
 
-          <Langkah nomor="03" judul="· Cetak">
+          <Langkah judul="Cetak">
             <div className="grid gap-6 sm:grid-cols-2 sm:items-start">
               <PilihTemplate
                 template={state.template}
@@ -88,6 +90,7 @@ export default function Iqro() {
               />
               <div className="pt-3">
                 <PreviewTemplate state={state} data={dataQr} />
+                <TombolUnduh state={state} data={dataQr} />
               </div>
             </div>
           </Langkah>

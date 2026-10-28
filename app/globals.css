@@ -1,39 +1,59 @@
 @import "tailwindcss";
 
-/* Token warna tema terang. Komponen memakai kelas token (bg-latar, text-teks, ...), bukan warna mentah. */
+/* Palet monokrom solid: kertas putih, tinta hitam murni, satu warna kuat (biru kobalt).
+   Kobalt hanya untuk yang bisa diklik atau sedang dipilih. Teks sekunder tetap gelap, tidak pudar.
+   Tanpa garis: area dipisah dengan beda warna blok (latar halaman vs panel vs kolom isian).
+   --garis sengaja transparan; border tetap ada supaya hover/fokus bisa menyalakannya jadi kobalt.
+   Token tema terang. Komponen memakai kelas token (bg-latar, text-teks, ...), bukan warna mentah. */
 :root {
-  color-scheme: light dark;
-  --latar: #f4f7fb;
+  color-scheme: light;
+  --latar: #ebebeb;
   --permukaan: #ffffff;
-  --garis: #d5deea;
-  --teks: #0f1e33;
-  --teks-redup: #4a5b72;
-  --biru: #1e4fa3;
-  --aksen: #c93a12;
+  --garis: transparent;
+  --teks: #000000;
+  --teks-redup: #3d3d3d;
+  --aksen: #1d3bd8;
   --teks-di-aksen: #ffffff;
   /* Khusus peringatan; kontras teks di atas latarnya > 4,5:1. */
-  --kuning: #7a4b00;
-  --kuning-latar: #fff4d6;
-  --merah: #a4161a;
-  --merah-latar: #fdecec;
+  --kuning: #6b4100;
+  --kuning-latar: #fff1c7;
+  --merah: #a3000b;
+  --merah-latar: #ffe5e5;
 }
 
-/* Tema gelap: otomatis mengikuti pengaturan sistem. */
+/* Tema gelap dipakai kalau: sistem gelap dan pengunjung tidak memilih "Terang",
+   ATAU pengunjung memilih "Gelap" (data-tema dipasang oleh lib/tema.ts dan public/tema.js).
+   Isi kedua blok di bawah harus sama — kalau mengubah satu, ubah juga yang lain. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --latar: #0b1424;
-    --permukaan: #12203a;
-    --garis: #24344f;
-    --teks: #e6edf7;
-    --teks-redup: #9aabc4;
-    --biru: #6ea0ff;
-    --aksen: #ff6a3d;
-    --teks-di-aksen: #0b1424;
-    --kuning: #ffd27a;
-    --kuning-latar: #2a2212;
-    --merah: #ff9c9c;
-    --merah-latar: #2e1416;
+  :root:not([data-tema="terang"]) {
+    color-scheme: dark;
+    --latar: #000000;
+    --permukaan: #1a1a1a;
+    --garis: transparent;
+    --teks: #ffffff;
+    --teks-redup: #d0d0d0;
+    --aksen: #6b84ff;
+    --teks-di-aksen: #000000;
+    --kuning: #ffd25c;
+    --kuning-latar: #2b2100;
+    --merah: #ff8a8a;
+    --merah-latar: #330608;
   }
+}
+
+:root[data-tema="gelap"] {
+  color-scheme: dark;
+  --latar: #000000;
+  --permukaan: #1a1a1a;
+  --garis: transparent;
+  --teks: #ffffff;
+  --teks-redup: #d0d0d0;
+  --aksen: #6b84ff;
+  --teks-di-aksen: #000000;
+  --kuning: #ffd25c;
+  --kuning-latar: #2b2100;
+  --merah: #ff8a8a;
+  --merah-latar: #330608;
 }
 
 /* Memetakan token ke Tailwind, mis. --color-latar → bg-latar, text-latar, border-latar. */
@@ -45,7 +65,6 @@
   --color-garis: var(--garis);
   --color-teks: var(--teks);
   --color-teks-redup: var(--teks-redup);
-  --color-biru: var(--biru);
   --color-aksen: var(--aksen);
   --color-teks-di-aksen: var(--teks-di-aksen);
   --color-kuning: var(--kuning);

@@ -63,6 +63,9 @@ export type HasilLogo = { ok: true; logo: Logo } | { ok: false; error: string };
 
 export type TingkatPeringatan = "kuning" | "merah";
 
+// Tema tampilan web (bukan warna cetak). "sistem" = ikut pengaturan perangkat.
+export type PilihanTema = "sistem" | "terang" | "gelap";
+
 export type CekWarna = {
   rasio: number;
   terlaluMirip: boolean;

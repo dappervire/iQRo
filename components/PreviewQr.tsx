@@ -68,7 +68,7 @@ export default function PreviewQr({ state, data }: Props) {
           <div ref={wadahRef} className="[&>canvas]:h-auto [&>canvas]:w-full" />
         </div>
         {!data && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-md border border-dashed border-garis p-6 text-center text-sm text-teks-redup">
+          <div className="absolute inset-0 flex items-center justify-center rounded-md bg-latar p-6 text-center text-sm text-teks-redup">
             QR muncul di sini setelah kamu menempel link.
           </div>
         )}
@@ -79,15 +79,16 @@ export default function PreviewQr({ state, data }: Props) {
         {LEBAR_UNDUH} × {LEBAR_UNDUH} px
       </p>
       {data && (
-        <p className="mt-1 break-all text-center font-mono text-xs text-biru">{data}</p>
+        <p className="mt-1 break-all text-center font-mono text-xs text-aksen">{data}</p>
       )}
 
-      <div className="mt-5 grid grid-cols-[3fr_2fr] gap-2">
+      {/* Dua kolom kalau muat (tiap tombol min. 9,5rem), kalau sempit otomatis bertumpuk. */}
+      <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))] gap-2">
         <button
           type="button"
           onClick={() => unduh("png")}
           disabled={!data || sedangUnduh !== null}
-          className="flex items-center justify-center gap-2 rounded-md bg-aksen px-4 py-2.5 font-semibold text-teks-di-aksen hover:opacity-90 disabled:cursor-not-allowed disabled:bg-garis disabled:text-teks-redup disabled:hover:opacity-100"
+          className="flex items-center justify-center gap-2 rounded-md border border-aksen bg-aksen px-4 py-2.5 font-semibold text-teks-di-aksen hover:opacity-90 disabled:cursor-not-allowed disabled:border-transparent disabled:bg-latar disabled:text-teks-redup disabled:hover:opacity-100"
         >
           <Download aria-hidden="true" className="size-4" />
           {sedangUnduh === "png" ? "Menyiapkan…" : "Unduh PNG"}
@@ -96,7 +97,7 @@ export default function PreviewQr({ state, data }: Props) {
           type="button"
           onClick={() => unduh("svg")}
           disabled={!data || sedangUnduh !== null}
-          className="flex items-center justify-center gap-2 rounded-md border border-garis px-4 py-2.5 font-semibold text-teks hover:border-aksen disabled:cursor-not-allowed disabled:text-teks-redup disabled:hover:border-garis"
+          className="flex items-center justify-center gap-2 rounded-md border border-garis bg-latar px-4 py-2.5 font-semibold text-teks hover:border-aksen disabled:cursor-not-allowed disabled:border-transparent disabled:text-teks-redup"
         >
           {sedangUnduh === "svg" ? "Menyiapkan…" : "Unduh SVG"}
         </button>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { jakarta } from "@/lib/font";
-import { buatOpsiQr } from "@/lib/qr";
+import { buatGambarQr } from "@/lib/qr";
 import { DPI, mmKePx } from "@/lib/satuan";
 import { TEMPLATE, gambarTemplate, muatFontTemplate } from "@/lib/template";
 import type { State, TemplateId } from "@/lib/types";
@@ -25,13 +25,7 @@ export default function PreviewTemplate({ state, data }: Props) {
   useEffect(() => {
     let batal = false;
     const timer = setTimeout(async () => {
-      let qr: ImageBitmap | null = null;
-      if (data) {
-        const { default: QRCodeStyling } = await import("qr-code-styling");
-        const instance = new QRCodeStyling(buatOpsiQr(state, data, mmKePx(def.qrMm)));
-        const blob = await instance.getRawData("png");
-        if (blob instanceof Blob) qr = await createImageBitmap(blob);
-      }
+      const qr = data ? await buatGambarQr(state, data, mmKePx(def.qrMm)) : null;
       await muatFontTemplate(font);
       // Kalau state sudah berubah lagi selama menunggu, gambar ini sudah basi.
       if (!batal && canvasRef.current) gambarTemplate(canvasRef.current, def, state, qr, font);

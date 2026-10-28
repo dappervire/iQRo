@@ -92,7 +92,7 @@ export default function PilihTemplate({
           {DAFTAR_TEMPLATE.map((def) => (
             <label
               key={def.id}
-              className="flex cursor-pointer flex-col items-center gap-2 rounded-md border border-garis bg-latar px-1 pb-2.5 pt-3 text-center hover:border-teks-redup has-[:checked]:border-aksen has-[:checked]:ring-1 has-[:checked]:ring-aksen has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-aksen"
+              className="flex cursor-pointer flex-col items-center gap-2 rounded-md border border-garis bg-latar px-1 pb-2.5 pt-3 text-center hover:border-aksen has-[:checked]:border-aksen has-[:checked]:ring-1 has-[:checked]:ring-aksen has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-aksen"
             >
               <input
                 type="radio"

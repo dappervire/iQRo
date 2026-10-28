@@ -3,7 +3,7 @@ import type { CekWarna } from "./types";
 // Di bawah angka ini, kamera HP mulai sulit membedakan titik QR dari latarnya.
 export const KONTRAS_MINIMAL = 3;
 
-// "#1e4fa3" → [30, 79, 163]. Menerima juga bentuk pendek "#fff". Teks rusak dianggap hitam.
+// "#c2185b" → [194, 24, 91]. Menerima juga bentuk pendek "#fff". Teks rusak dianggap hitam.
 function hexKeRgb(hex: string): [number, number, number] {
   let h = hex.trim().replace(/^#/, "");
   if (/^[0-9a-f]{3}$/i.test(h)) {

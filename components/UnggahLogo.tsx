@@ -100,7 +100,7 @@ export default function UnggahLogo({
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="flex items-center gap-1.5 rounded-md border border-garis px-2.5 py-1.5 text-sm font-medium hover:border-teks-redup"
+              className="flex items-center gap-1.5 rounded-md border border-garis px-2.5 py-1.5 text-sm font-medium hover:border-aksen"
             >
               <RefreshCw aria-hidden="true" className="size-4" />
               Ganti
@@ -126,10 +126,10 @@ export default function UnggahLogo({
           onDragLeave={() => setSedangSeret(false)}
           onDrop={saatLepas}
           className={`flex cursor-pointer items-center gap-3 rounded-md border border-dashed p-4 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-aksen ${
-            sedangSeret ? "border-aksen bg-permukaan" : "border-garis bg-latar hover:border-teks-redup"
+            sedangSeret ? "border-aksen bg-permukaan" : "border-garis bg-latar hover:border-aksen"
           }`}
         >
-          <ImagePlus aria-hidden="true" className="size-6 shrink-0 text-biru" />
+          <ImagePlus aria-hidden="true" className="size-6 shrink-0 text-aksen" />
           <span className="min-w-0">
             <span className="block text-sm font-medium">
               {sedangBaca ? "Membaca logo…" : "Pilih logo atau tarik file ke sini"}

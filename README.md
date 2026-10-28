@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# iQRo — QR siap baca, siap cetak
 
-## Getting Started
+Buat QR code dari link, dengan logo di tengah dan template siap cetak untuk UMKM. Semua diproses di browser: tidak ada akun, tidak ada server, logo tidak diunggah ke mana pun.
 
-First, run the development server:
+![Tampilan iQRo](docs/screenshot.png)
+
+## Fitur
+
+- Link otomatis dirapikan (`tokoku.id` → `https://tokoku.id`); hanya link http/https yang diterima.
+- Warna QR dan latar, dengan peringatan kalau kontras terlalu rendah atau QR terbalik.
+- Logo di tengah (PNG, JPG, WebP, SVG, maks. 2 MB), ukuran 15–30%.
+- 3 template siap cetak 300 DPI: Stiker meja 100×100 mm, Poster A5 148×210 mm, Kartu kecil 90×55 mm.
+- Unduh QR saja (PNG 1024 px, SVG) atau template (PNG 300 DPI, PDF ukuran asli).
+- Tema terang dan gelap mengikuti pengaturan perangkat.
+
+## Tech stack
+
+- [Next.js](https://nextjs.org) 16 (App Router) + TypeScript
+- Tailwind CSS
+- [qr-code-styling](https://github.com/kozakdenys/qr-code-styling), [jsPDF](https://github.com/parallax/jsPDF), [lucide-react](https://lucide.dev)
+- Font: Plus Jakarta Sans, JetBrains Mono (`next/font/google`)
+
+## Menjalankan di komputer
+
+Butuh [Node.js](https://nodejs.org) versi LTS.
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Perintah lain:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run lint    # cek kode
+npm run build   # build produksi
+```

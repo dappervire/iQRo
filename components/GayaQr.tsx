@@ -16,7 +16,7 @@ export function PemilihWarna({ id, label, nilai, onUbah, pesanId }: PemilihWarna
   return (
     <label
       htmlFor={id}
-      className="flex cursor-pointer items-center gap-3 rounded-md border border-garis bg-latar p-2 hover:border-teks-redup"
+      className="flex cursor-pointer items-center gap-3 rounded-md border border-garis bg-latar p-2 hover:border-aksen"
     >
       <input
         id={id}
