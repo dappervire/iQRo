@@ -1,4 +1,5 @@
 import type { Aksi, State } from "./types";
+import { UKURAN_LOGO_MAKS, UKURAN_LOGO_MIN } from "./logo";
 import { normalisasiUrl } from "./validasi";
 
 export const stateAwal: State = {
@@ -33,6 +34,16 @@ export function reducer(state: State, aksi: Aksi): State {
       return { ...state, warnaLatar: aksi.warna };
     case "tukarWarna":
       return { ...state, warnaQr: state.warnaLatar, warnaLatar: state.warnaQr };
+    case "pasangLogo":
+      return { ...state, logo: aksi.logo };
+    case "hapusLogo":
+      return { ...state, logo: null };
+    case "ubahUkuranLogo": {
+      const ukuran = Math.min(UKURAN_LOGO_MAKS, Math.max(UKURAN_LOGO_MIN, aksi.ukuran));
+      return { ...state, ukuranLogo: ukuran };
+    }
+    case "ubahLatarLogo":
+      return { ...state, latarLogo: aksi.aktif };
     default:
       return state;
   }

@@ -24,7 +24,13 @@ export type Aksi =
   | { type: "ubahUrl"; url: string }
   | { type: "ubahWarnaQr"; warna: string }
   | { type: "ubahWarnaLatar"; warna: string }
-  | { type: "tukarWarna" };
+  | { type: "tukarWarna" }
+  | { type: "pasangLogo"; logo: Logo }
+  | { type: "hapusLogo" }
+  | { type: "ubahUkuranLogo"; ukuran: number }
+  | { type: "ubahLatarLogo"; aktif: boolean };
+
+export type HasilLogo = { ok: true; logo: Logo } | { ok: false; error: string };
 
 export type TingkatPeringatan = "kuning" | "merah";
 

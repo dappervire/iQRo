@@ -6,6 +6,7 @@ import { normalisasiUrl } from "@/lib/validasi";
 import GayaQr from "./GayaQr";
 import LangkahLink from "./LangkahLink";
 import PreviewQr from "./PreviewQr";
+import UnggahLogo from "./UnggahLogo";
 
 type LangkahProps = {
   nomor: string;
@@ -58,6 +59,17 @@ export default function Iqro() {
               onUbahLatar={(warna) => dispatch({ type: "ubahWarnaLatar", warna })}
               onTukar={() => dispatch({ type: "tukarWarna" })}
             />
+            <div className="mt-6 border-t border-garis pt-5">
+              <UnggahLogo
+                logo={state.logo}
+                ukuran={state.ukuranLogo}
+                latarLogo={state.latarLogo}
+                onPasang={(logo) => dispatch({ type: "pasangLogo", logo })}
+                onHapus={() => dispatch({ type: "hapusLogo" })}
+                onUbahUkuran={(ukuran) => dispatch({ type: "ubahUkuranLogo", ukuran })}
+                onUbahLatar={(aktif) => dispatch({ type: "ubahLatarLogo", aktif })}
+              />
+            </div>
           </Langkah>
 
           <Langkah nomor="03" judul="· Cetak">
