@@ -5,9 +5,15 @@ import type { State } from "./types";
 // Quiet zone (bingkai kosong di sekeliling QR) minimal 8% lebar gambar.
 const RASIO_MARGIN = 0.08;
 
-export function buatOpsiQr(state: State, data: string, lebar: number): Options {
+// jenis "canvas" untuk preview & PNG, "svg" untuk unduhan SVG.
+export function buatOpsiQr(
+  state: State,
+  data: string,
+  lebar: number,
+  jenis: "canvas" | "svg" = "canvas",
+): Options {
   return {
-    type: "canvas",
+    type: jenis,
     width: lebar,
     height: lebar,
     margin: Math.round(lebar * RASIO_MARGIN),

@@ -27,6 +27,12 @@ export function reducer(state: State, aksi: Aksi): State {
         urlPeringatan: hasil.ok ? hasil.peringatan : null,
       };
     }
+    case "ubahWarnaQr":
+      return { ...state, warnaQr: aksi.warna };
+    case "ubahWarnaLatar":
+      return { ...state, warnaLatar: aksi.warna };
+    case "tukarWarna":
+      return { ...state, warnaQr: state.warnaLatar, warnaLatar: state.warnaQr };
     default:
       return state;
   }

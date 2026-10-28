@@ -1,4 +1,5 @@
-import { CircleAlert, Link2, TriangleAlert } from "lucide-react";
+import { Link2 } from "lucide-react";
+import Peringatan from "./Peringatan";
 
 type Props = {
   url: string;
@@ -32,19 +33,9 @@ export default function LangkahLink({ url, error, peringatan, onUbah }: Props) {
           className="w-full rounded-md border border-garis bg-latar py-2.5 pl-9 pr-3 text-base text-teks placeholder:text-teks-redup focus:border-aksen focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aksen/30"
         />
       </div>
-      <div id="link-pesan" aria-live="polite" className="text-sm">
-        {error && (
-          <p className="mt-2 flex items-start gap-2 rounded-md bg-merah-latar px-3 py-2 text-merah">
-            <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            {error}
-          </p>
-        )}
-        {peringatan && (
-          <p className="mt-2 flex items-start gap-2 rounded-md bg-kuning-latar px-3 py-2 text-kuning">
-            <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            {peringatan}
-          </p>
-        )}
+      <div id="link-pesan" aria-live="polite">
+        {error && <Peringatan tingkat="merah">{error}</Peringatan>}
+        {peringatan && <Peringatan tingkat="kuning">{peringatan}</Peringatan>}
       </div>
     </div>
   );

@@ -20,7 +20,19 @@ export type State = {
   warnaTema: string;
 };
 
-export type Aksi = { type: "ubahUrl"; url: string };
+export type Aksi =
+  | { type: "ubahUrl"; url: string }
+  | { type: "ubahWarnaQr"; warna: string }
+  | { type: "ubahWarnaLatar"; warna: string }
+  | { type: "tukarWarna" };
+
+export type TingkatPeringatan = "kuning" | "merah";
+
+export type CekWarna = {
+  rasio: number;
+  terlaluMirip: boolean;
+  terbalik: boolean;
+};
 
 export type HasilUrl =
   | { ok: true; url: string; peringatan: string | null }

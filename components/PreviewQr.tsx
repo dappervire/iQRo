@@ -21,7 +21,8 @@ type Props = {
 export default function PreviewQr({ state, data }: Props) {
   const wadahRef = useRef<HTMLDivElement>(null);
   const qrRef = useRef<QRCodeStyling | null>(null);
-  const [sedangUnduh, setSedangUnduh] = useState(false);
+  // Format yang sedang disiapkan; null = tidak ada unduhan berjalan.
+  const [sedangUnduh, setSedangUnduh] = useState<"png" | "svg" | null>(null);
 
   useEffect(() => {
     if (!data) return;
@@ -43,16 +44,17 @@ export default function PreviewQr({ state, data }: Props) {
     };
   }, [state, data]);
 
-  async function unduhPng() {
+  async function unduh(format: "png" | "svg") {
     if (!data) return;
-    setSedangUnduh(true);
+    setSedangUnduh(format);
     try {
       const { default: QRCodeStyling } = await import("qr-code-styling");
-      const qr = new QRCodeStyling(buatOpsiQr(state, data, LEBAR_UNDUH));
-      const blob = await qr.getRawData("png");
-      if (blob instanceof Blob) unduhBlob(blob, namaFile("qr", "png"));
+      const jenis = format === "svg" ? "svg" : "canvas";
+      const qr = new QRCodeStyling(buatOpsiQr(state, data, LEBAR_UNDUH, jenis));
+      const blob = await qr.getRawData(format);
+      if (blob instanceof Blob) unduhBlob(blob, namaFile("qr", format));
     } finally {
-      setSedangUnduh(false);
+      setSedangUnduh(null);
     }
   }
 
@@ -80,15 +82,28 @@ export default function PreviewQr({ state, data }: Props) {
         <p className="mt-1 break-all text-center font-mono text-xs text-biru">{data}</p>
       )}
 
-      <button
-        type="button"
-        onClick={unduhPng}
-        disabled={!data || sedangUnduh}
-        className="mt-5 flex w-full items-center justify-center gap-2 rounded-md bg-aksen px-4 py-2.5 font-semibold text-teks-di-aksen hover:opacity-90 disabled:cursor-not-allowed disabled:bg-garis disabled:text-teks-redup disabled:hover:opacity-100"
-      >
-        <Download aria-hidden="true" className="size-4" />
-        {sedangUnduh ? "Menyiapkan…" : "Unduh PNG"}
-      </button>
+      <div className="mt-5 grid grid-cols-[3fr_2fr] gap-2">
+        <button
+          type="button"
+          onClick={() => unduh("png")}
+          disabled={!data || sedangUnduh !== null}
+          className="flex items-center justify-center gap-2 rounded-md bg-aksen px-4 py-2.5 font-semibold text-teks-di-aksen hover:opacity-90 disabled:cursor-not-allowed disabled:bg-garis disabled:text-teks-redup disabled:hover:opacity-100"
+        >
+          <Download aria-hidden="true" className="size-4" />
+          {sedangUnduh === "png" ? "Menyiapkan…" : "Unduh PNG"}
+        </button>
+        <button
+          type="button"
+          onClick={() => unduh("svg")}
+          disabled={!data || sedangUnduh !== null}
+          className="flex items-center justify-center gap-2 rounded-md border border-garis px-4 py-2.5 font-semibold text-teks hover:border-aksen disabled:cursor-not-allowed disabled:text-teks-redup disabled:hover:border-garis"
+        >
+          {sedangUnduh === "svg" ? "Menyiapkan…" : "Unduh SVG"}
+        </button>
+      </div>
+      <p className="mt-2 text-center text-xs text-teks-redup">
+        SVG tetap tajam di ukuran berapa pun, cocok untuk percetakan.
+      </p>
     </div>
   );
 }

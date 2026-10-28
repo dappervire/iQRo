@@ -3,6 +3,7 @@
 import { useReducer, type ReactNode } from "react";
 import { reducer, stateAwal } from "@/lib/state";
 import { normalisasiUrl } from "@/lib/validasi";
+import GayaQr from "./GayaQr";
 import LangkahLink from "./LangkahLink";
 import PreviewQr from "./PreviewQr";
 
@@ -50,7 +51,13 @@ export default function Iqro() {
           </Langkah>
 
           <Langkah nomor="02" judul="· Gaya QR">
-            <p className="text-sm text-teks-redup">Pilihan warna dan logo segera hadir.</p>
+            <GayaQr
+              warnaQr={state.warnaQr}
+              warnaLatar={state.warnaLatar}
+              onUbahQr={(warna) => dispatch({ type: "ubahWarnaQr", warna })}
+              onUbahLatar={(warna) => dispatch({ type: "ubahWarnaLatar", warna })}
+              onTukar={() => dispatch({ type: "tukarWarna" })}
+            />
           </Langkah>
 
           <Langkah nomor="03" judul="· Cetak">
