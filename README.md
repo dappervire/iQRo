@@ -2,6 +2,8 @@
 
 Buat QR code dari link, dengan logo di tengah dan template siap cetak untuk UMKM. Semua diproses di browser: tidak ada akun, tidak ada server, logo tidak diunggah ke mana pun.
 
+**Coba langsung:** [iqro-alpha.vercel.app](https://iqro-alpha.vercel.app)
+
 ![Tampilan iQRo](docs/screenshot.png)
 
 ## Fitur
@@ -11,7 +13,7 @@ Buat QR code dari link, dengan logo di tengah dan template siap cetak untuk UMKM
 - Logo di tengah (PNG, JPG, WebP, SVG, maks. 2 MB), ukuran 15–30%.
 - 3 template siap cetak 300 DPI: Stiker meja 100×100 mm, Poster A5 148×210 mm, Kartu kecil 90×55 mm.
 - Unduh QR saja (PNG 1024 px, SVG) atau template (PNG 300 DPI, PDF ukuran asli).
-- Tema terang dan gelap mengikuti pengaturan perangkat.
+- Tema terang dan gelap: ikut pengaturan perangkat, atau pilih sendiri lewat tombol tema.
 
 ## Tech stack
 
