@@ -1,26 +1,65 @@
 @import "tailwindcss";
 
+/* Token warna tema terang. Komponen memakai kelas token (bg-latar, text-teks, ...), bukan warna mentah. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light dark;
+  --latar: #f4f7fb;
+  --permukaan: #ffffff;
+  --garis: #d5deea;
+  --teks: #0f1e33;
+  --teks-redup: #4a5b72;
+  --biru: #1e4fa3;
+  --aksen: #c93a12;
+  --teks-di-aksen: #ffffff;
+  /* Khusus peringatan; kontras teks di atas latarnya > 4,5:1. */
+  --kuning: #7a4b00;
+  --kuning-latar: #fff4d6;
+  --merah: #a4161a;
+  --merah-latar: #fdecec;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* Tema gelap: otomatis mengikuti pengaturan sistem. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --latar: #0b1424;
+    --permukaan: #12203a;
+    --garis: #24344f;
+    --teks: #e6edf7;
+    --teks-redup: #9aabc4;
+    --biru: #6ea0ff;
+    --aksen: #ff6a3d;
+    --teks-di-aksen: #0b1424;
+    --kuning: #ffd27a;
+    --kuning-latar: #2a2212;
+    --merah: #ff9c9c;
+    --merah-latar: #2e1416;
   }
 }
 
+/* Memetakan token ke Tailwind, mis. --color-latar → bg-latar, text-latar, border-latar. */
+@theme inline {
+  --font-sans: var(--font-jakarta);
+  --font-mono: var(--font-jetbrains);
+  --color-latar: var(--latar);
+  --color-permukaan: var(--permukaan);
+  --color-garis: var(--garis);
+  --color-teks: var(--teks);
+  --color-teks-redup: var(--teks-redup);
+  --color-biru: var(--biru);
+  --color-aksen: var(--aksen);
+  --color-teks-di-aksen: var(--teks-di-aksen);
+  --color-kuning: var(--kuning);
+  --color-kuning-latar: var(--kuning-latar);
+  --color-merah: var(--merah);
+  --color-merah-latar: var(--merah-latar);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-latar font-sans text-teks;
+}
+
+/* Fokus keyboard selalu terlihat, dengan warna aksen. */
+:focus-visible {
+  outline: 2px solid var(--aksen);
+  outline-offset: 2px;
 }
