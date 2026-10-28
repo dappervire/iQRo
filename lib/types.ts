@@ -28,7 +28,36 @@ export type Aksi =
   | { type: "pasangLogo"; logo: Logo }
   | { type: "hapusLogo" }
   | { type: "ubahUkuranLogo"; ukuran: number }
-  | { type: "ubahLatarLogo"; aktif: boolean };
+  | { type: "ubahLatarLogo"; aktif: boolean }
+  | { type: "pilihTemplate"; template: TemplateId }
+  | { type: "ubahJudul"; judul: string }
+  | { type: "ubahSubjudul"; subjudul: string }
+  | { type: "ubahWarnaTema"; warna: string };
+
+// Posisi dan ukuran dalam milimeter, diukur dari sudut kiri atas kertas.
+export type KotakMm = {
+  x: number;
+  y: number;
+  lebar: number;
+  tinggi: number;
+};
+
+export type KotakTeks = KotakMm & {
+  ukuranMm: number; // ukuran huruf terbesar; diperkecil otomatis kalau teks tidak muat
+  rata: "kiri" | "tengah";
+  vertikal: "atas" | "tengah" | "bawah";
+};
+
+export type DefinisiTemplate = {
+  id: TemplateId;
+  nama: string;
+  lebarMm: number;
+  tinggiMm: number;
+  qrMm: number;
+  panel: KotakMm; // panel putih, QR diletakkan di tengahnya
+  judul: KotakTeks;
+  subjudul: KotakTeks;
+};
 
 export type HasilLogo = { ok: true; logo: Logo } | { ok: false; error: string };
 

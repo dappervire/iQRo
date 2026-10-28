@@ -1,5 +1,6 @@
 import type { Aksi, State } from "./types";
 import { UKURAN_LOGO_MAKS, UKURAN_LOGO_MIN } from "./logo";
+import { PANJANG_JUDUL_MAKS, PANJANG_SUBJUDUL_MAKS } from "./template";
 import { normalisasiUrl } from "./validasi";
 
 export const stateAwal: State = {
@@ -44,6 +45,14 @@ export function reducer(state: State, aksi: Aksi): State {
     }
     case "ubahLatarLogo":
       return { ...state, latarLogo: aksi.aktif };
+    case "pilihTemplate":
+      return { ...state, template: aksi.template };
+    case "ubahJudul":
+      return { ...state, judul: aksi.judul.slice(0, PANJANG_JUDUL_MAKS) };
+    case "ubahSubjudul":
+      return { ...state, subjudul: aksi.subjudul.slice(0, PANJANG_SUBJUDUL_MAKS) };
+    case "ubahWarnaTema":
+      return { ...state, warnaTema: aksi.warna };
     default:
       return state;
   }

@@ -5,7 +5,9 @@ import { reducer, stateAwal } from "@/lib/state";
 import { normalisasiUrl } from "@/lib/validasi";
 import GayaQr from "./GayaQr";
 import LangkahLink from "./LangkahLink";
+import PilihTemplate from "./PilihTemplate";
 import PreviewQr from "./PreviewQr";
+import PreviewTemplate from "./PreviewTemplate";
 import UnggahLogo from "./UnggahLogo";
 
 type LangkahProps = {
@@ -73,7 +75,21 @@ export default function Iqro() {
           </Langkah>
 
           <Langkah nomor="03" judul="· Cetak">
-            <p className="text-sm text-teks-redup">Template stiker, poster, dan kartu segera hadir.</p>
+            <div className="grid gap-6 sm:grid-cols-2 sm:items-start">
+              <PilihTemplate
+                template={state.template}
+                judul={state.judul}
+                subjudul={state.subjudul}
+                warnaTema={state.warnaTema}
+                onPilih={(template) => dispatch({ type: "pilihTemplate", template })}
+                onUbahJudul={(judul) => dispatch({ type: "ubahJudul", judul })}
+                onUbahSubjudul={(subjudul) => dispatch({ type: "ubahSubjudul", subjudul })}
+                onUbahWarnaTema={(warna) => dispatch({ type: "ubahWarnaTema", warna })}
+              />
+              <div className="pt-3">
+                <PreviewTemplate state={state} data={dataQr} />
+              </div>
+            </div>
           </Langkah>
         </div>
 

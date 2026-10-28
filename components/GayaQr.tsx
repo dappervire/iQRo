@@ -7,10 +7,12 @@ type PemilihWarnaProps = {
   label: string;
   nilai: string;
   onUbah: (warna: string) => void;
+  pesanId?: string; // id elemen pesan yang menjelaskan pilihan warna ini (untuk pembaca layar)
 };
 
 // Satu "chip tinta": seluruh kotak bisa diklik untuk membuka pemilih warna bawaan browser.
-function PemilihWarna({ id, label, nilai, onUbah }: PemilihWarnaProps) {
+// Dipakai juga oleh PilihTemplate untuk warna tema.
+export function PemilihWarna({ id, label, nilai, onUbah, pesanId }: PemilihWarnaProps) {
   return (
     <label
       htmlFor={id}
@@ -21,7 +23,7 @@ function PemilihWarna({ id, label, nilai, onUbah }: PemilihWarnaProps) {
         type="color"
         value={nilai}
         onChange={(e) => onUbah(e.target.value)}
-        aria-describedby="warna-pesan"
+        aria-describedby={pesanId}
         className="h-11 w-14 shrink-0 cursor-pointer rounded border border-garis bg-transparent p-0 [&::-moz-color-swatch]:rounded-sm [&::-moz-color-swatch]:border-none [&::-webkit-color-swatch]:rounded-sm [&::-webkit-color-swatch]:border-none [&::-webkit-color-swatch-wrapper]:p-0"
       />
       <span className="min-w-0">
@@ -46,8 +48,20 @@ export default function GayaQr({ warnaQr, warnaLatar, onUbahQr, onUbahLatar, onT
   return (
     <div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <PemilihWarna id="warna-qr" label="Warna QR" nilai={warnaQr} onUbah={onUbahQr} />
-        <PemilihWarna id="warna-latar" label="Warna latar" nilai={warnaLatar} onUbah={onUbahLatar} />
+        <PemilihWarna
+          id="warna-qr"
+          label="Warna QR"
+          nilai={warnaQr}
+          onUbah={onUbahQr}
+          pesanId="warna-pesan"
+        />
+        <PemilihWarna
+          id="warna-latar"
+          label="Warna latar"
+          nilai={warnaLatar}
+          onUbah={onUbahLatar}
+          pesanId="warna-pesan"
+        />
       </div>
 
       <p className="mt-3 text-sm text-teks-redup">
