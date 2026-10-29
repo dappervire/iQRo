@@ -4,6 +4,7 @@ import { useReducer, type ReactNode } from "react";
 import { reducer, stateAwal } from "@/lib/state";
 import { normalisasiUrl } from "@/lib/validasi";
 import GayaQr from "./GayaQr";
+import IqroLogo from "./IqroLogo";
 import LangkahLink from "./LangkahLink";
 import PilihTema from "./PilihTema";
 import PilihTemplate from "./PilihTemplate";
@@ -34,9 +35,10 @@ export default function Iqro() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 lg:py-10">
       <header className="mb-6 flex items-center justify-between gap-4 border-b border-garis pb-4">
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-          <h1 className="text-2xl font-extrabold tracking-tight">
-            iQRo<span className="sr-only"> — QR siap baca, siap cetak</span>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <h1>
+            <IqroLogo className="size-10 text-teks lg:size-12" />
+            <span className="sr-only"> — QR siap baca, siap cetak</span>
           </h1>
           <p className="text-sm text-teks-redup">QR siap baca, siap cetak.</p>
         </div>
