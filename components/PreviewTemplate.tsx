@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { jakarta } from "@/lib/font";
 import { buatGambarQr } from "@/lib/qr";
 import { DPI, mmKePx } from "@/lib/satuan";
@@ -12,6 +12,10 @@ import TandaPotong from "./TandaPotong";
 const LEBAR_TAMPIL: Record<TemplateId, number> = { stiker: 240, poster: 200, kartu: 280 };
 const JEDA_MS = 200;
 
+function pesanGalat(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
 type Props = {
   state: State;
   data: string | null;
@@ -19,16 +23,31 @@ type Props = {
 
 export default function PreviewTemplate({ state, data }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [galat, setGalat] = useState<string | null>(null);
   const def = TEMPLATE[state.template];
   const font = jakarta.style.fontFamily;
 
   useEffect(() => {
     let batal = false;
     const timer = setTimeout(async () => {
-      const qr = data ? await buatGambarQr(state, data, mmKePx(def.qrMm)) : null;
-      await muatFontTemplate(font);
+      const masalah: string[] = [];
+      // Kalau QR atau font gagal, template tetap digambar (kotak abu-abu / font cadangan).
+      const qr = data
+        ? await buatGambarQr(state, data, mmKePx(def.qrMm)).catch((e: unknown) => {
+            masalah.push(`QR: ${pesanGalat(e)}`);
+            return null;
+          })
+        : null;
+      await muatFontTemplate(font).catch((e: unknown) => masalah.push(`Font: ${pesanGalat(e)}`));
       // Kalau state sudah berubah lagi selama menunggu, gambar ini sudah basi.
-      if (!batal && canvasRef.current) gambarTemplate(canvasRef.current, def, state, qr, font);
+      if (!batal && canvasRef.current) {
+        try {
+          gambarTemplate(canvasRef.current, def, state, qr, font);
+        } catch (e) {
+          masalah.push(`Gambar: ${pesanGalat(e)}`);
+        }
+        setGalat(masalah.length ? masalah.join(" · ") : null);
+      }
       qr?.close();
     }, JEDA_MS);
     return () => {
@@ -64,6 +83,11 @@ export default function PreviewTemplate({ state, data }: Props) {
           {mmKePx(def.lebarMm)} × {mmKePx(def.tinggiMm)} px
         </span>
       </figcaption>
+      {galat && (
+        <p role="alert" className="mt-2 text-center text-xs text-teks-redup">
+          Preview bermasalah di browser ini ({galat}).
+        </p>
+      )}
       {!data && (
         <p className="mt-2 text-center text-xs text-teks-redup">
           Kotak abu-abu akan terisi QR setelah link diisi.
