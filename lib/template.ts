@@ -119,10 +119,13 @@ function gambarTeks(
 }
 
 // Tunggu font halaman siap supaya canvas tidak memakai font cadangan.
+// Hanya font utama yang dimuat: font cadangan next/font memakai local("Arial"), yang tidak ada
+// di Android sehingga document.fonts.load gagal ("A network error occurred").
 export async function muatFontTemplate(font: string): Promise<void> {
+  const utama = font.split(",")[0].trim();
   await Promise.all([
-    document.fonts.load(`${BERAT_JUDUL} 40px ${font}`),
-    document.fonts.load(`${BERAT_SUBJUDUL} 40px ${font}`),
+    document.fonts.load(`${BERAT_JUDUL} 40px ${utama}`),
+    document.fonts.load(`${BERAT_SUBJUDUL} 40px ${utama}`),
   ]);
 }
 
@@ -139,7 +142,8 @@ export function gambarTemplate(
   if (canvas.width !== lebar) canvas.width = lebar;
   if (canvas.height !== tinggi) canvas.height = tinggi;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  // Di HP, canvas besar bisa ditolak kalau memori browser penuh.
+  if (!ctx) throw new Error("canvas tidak bisa dibuat (memori browser penuh?)");
 
   // 1. Latar warna tema.
   ctx.fillStyle = isi.warnaTema;
@@ -149,7 +153,12 @@ export function gambarTemplate(
   const p = def.panel;
   ctx.fillStyle = "#ffffff";
   ctx.beginPath();
-  ctx.roundRect(mmKePx(p.x), mmKePx(p.y), mmKePx(p.lebar), mmKePx(p.tinggi), mmKePx(SUDUT_PANEL_MM));
+  // roundRect belum ada di browser lama (mis. Safari < 16): pakai kotak biasa.
+  if (typeof ctx.roundRect === "function") {
+    ctx.roundRect(mmKePx(p.x), mmKePx(p.y), mmKePx(p.lebar), mmKePx(p.tinggi), mmKePx(SUDUT_PANEL_MM));
+  } else {
+    ctx.rect(mmKePx(p.x), mmKePx(p.y), mmKePx(p.lebar), mmKePx(p.tinggi));
+  }
   ctx.fill();
 
   // 3. QR di tengah panel.

@@ -11,9 +11,20 @@ import TandaPotong from "./TandaPotong";
 // Canvas digambar penuh 300 DPI, lalu diperkecil dengan CSS ke lebar ini (px layar).
 const LEBAR_TAMPIL: Record<TemplateId, number> = { stiker: 240, poster: 200, kartu: 280 };
 const JEDA_MS = 200;
+const BATAS_WAKTU_MS = 8000;
 
 function pesanGalat(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
+}
+
+// Kalau sebuah langkah tidak pernah selesai (macet), anggap gagal supaya pesan tetap muncul.
+function denganBatasWaktu<T>(janji: Promise<T>): Promise<T> {
+  return Promise.race([
+    janji,
+    new Promise<never>((_, tolak) =>
+      setTimeout(() => tolak(new Error(`macet lebih dari ${BATAS_WAKTU_MS / 1000} detik`)), BATAS_WAKTU_MS),
+    ),
+  ]);
 }
 
 type Props = {
@@ -33,12 +44,12 @@ export default function PreviewTemplate({ state, data }: Props) {
       const masalah: string[] = [];
       // Kalau QR atau font gagal, template tetap digambar (kotak abu-abu / font cadangan).
       const qr = data
-        ? await buatGambarQr(state, data, mmKePx(def.qrMm)).catch((e: unknown) => {
+        ? await denganBatasWaktu(buatGambarQr(state, data, mmKePx(def.qrMm))).catch((e: unknown) => {
             masalah.push(`QR: ${pesanGalat(e)}`);
             return null;
           })
         : null;
-      await muatFontTemplate(font).catch((e: unknown) => masalah.push(`Font: ${pesanGalat(e)}`));
+      await denganBatasWaktu(muatFontTemplate(font)).catch((e: unknown) => masalah.push(`Font: ${pesanGalat(e)}`));
       // Kalau state sudah berubah lagi selama menunggu, gambar ini sudah basi.
       if (!batal && canvasRef.current) {
         try {
