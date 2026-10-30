@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Script from "next/script";
+import HeaderSitus from "@/components/HeaderSitus";
+import { KELAS_TAUTAN } from "@/components/KotakAkun";
 import { jakarta, jetbrains } from "@/lib/font";
 import "./globals.css";
 
@@ -18,7 +21,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${jakarta.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <body className="min-h-full">
+        <HeaderSitus />
         {children}
+        <footer className="mx-auto max-w-5xl px-4 pb-8 text-sm">
+          <Link href="/privasi" className={KELAS_TAUTAN}>
+            Kebijakan Privasi
+          </Link>
+        </footer>
         <Script src="/tema.js" strategy="beforeInteractive" />
       </body>
     </html>

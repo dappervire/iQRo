@@ -75,3 +75,17 @@ export type CekWarna = {
 export type HasilUrl =
   | { ok: true; url: string; peringatan: string | null }
   | { ok: false; error: string | null };
+
+// --- Akun (v2) ---
+
+// Data login yang sudah diverifikasi server (dari getClaims), bukan kiriman browser.
+export type Pengguna = {
+  id: string;
+  email: string;
+};
+
+// Hasil Server Action di form akun. "terkirim" = email (verifikasi / ganti sandi) sudah dikirim.
+export type HasilAksiAkun =
+  | { status: "awal" }
+  | { status: "galat"; pesan: string; email: string }
+  | { status: "terkirim"; judul: string; pesan: string };
