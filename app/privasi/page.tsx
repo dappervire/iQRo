@@ -51,8 +51,13 @@ export default function HalamanPrivasi() {
               menghapusnya setiap hari.
             </li>
             <li>
-              Link tujuan diperiksa lewat Google Safe Browsing supaya link berbahaya tidak bisa
-              dibuat.
+              Link tujuan dikirim ke Google Safe Browsing untuk diperiksa, supaya link berbahaya
+              tidak bisa dibuat. Yang dikirim hanya link tujuannya, tanpa data akunmu.
+            </li>
+            <li>
+              Kalau kamu melaporkan link lewat halaman Laporkan link, kami menyimpan isi laporannya.
+              Untuk membatasi laporan palsu, sidik acak alamat IP pelapor ikut disimpan dan dihapus
+              setelah 24 jam.
             </li>
           </ul>
         </Bagian>

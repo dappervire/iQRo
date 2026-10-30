@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
 import DaftarPeringkat from "@/components/DaftarPeringkat";
 import HapusAkun from "@/components/HapusAkun";
 import KartuLink from "@/components/KartuLink";
+import KlaimLinkTamu from "@/components/KlaimLinkTamu";
 import { KELAS_TAUTAN } from "@/components/KotakAkun";
 import { ambilPengguna } from "@/lib/auth";
 import {
@@ -108,6 +109,7 @@ async function IsiDasbor({ searchParams }: { searchParams: ParamUrl }) {
 
   return (
     <>
+      <KlaimLinkTamu />
       {barisTerpopuler.length > 0 && (
         <div className="mt-8">
           <DaftarPeringkat

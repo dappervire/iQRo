@@ -1,7 +1,7 @@
 -- iQRo — skema database link pendek.
 -- Cara pakai: Supabase → SQL Editor → New query → tempel SELURUH isi file ini → Run.
 -- Aman dijalankan ulang (if not exists / or replace / drop ... if exists).
--- Bagian milestone berikutnya (reports, guest_creations) ditambahkan di bawah nanti.
+-- Fungsi yang hanya boleh dipanggil server iQRo diberi hak "service_role" (kunci secret), bukan anon.
 
 -- ============================================================
 -- M8: tabel links
@@ -37,10 +37,10 @@ create index if not exists links_pemilik_dibuat on public.links (pemilik_id, dib
 alter table public.links enable row level security;
 
 revoke all on public.links from anon, authenticated;
+-- User hanya boleh membaca dan menghapus langsung. Membuat & mengubah link (M11) hanya lewat
+-- server iQRo (lib/link.ts, kunci secret), supaya cek Google Safe Browsing tidak bisa dilewati.
 grant select, delete on public.links to authenticated;
--- Hanya kolom ini yang boleh diisi/diubah user; jumlah_klik, dinonaktifkan, dll. tidak.
-grant insert (slug, tujuan) on public.links to authenticated;
-grant update (tujuan) on public.links to authenticated;
+grant select, insert, update, delete on public.links to service_role;
 
 drop policy if exists "links: baca milik sendiri" on public.links;
 create policy "links: baca milik sendiri" on public.links
@@ -297,3 +297,187 @@ $$;
 
 revoke execute on function public.statistik_link(uuid) from public, anon, authenticated;
 grant execute on function public.statistik_link(uuid) to authenticated;
+
+-- ============================================================
+-- M11: link tamu, klaim, laporan, bersih-bersih harian
+-- ============================================================
+
+-- Mempercepat pencocokan kode klaim (hanya link tamu yang punya klaim_hash).
+create index if not exists links_klaim_hash on public.links (klaim_hash) where klaim_hash is not null;
+
+-- Catatan pembuatan link tamu, untuk batas 5 link per 24 jam per alamat IP.
+-- ip_hash = sidik acak (HMAC) alamat IP dari lib/tamu.ts; alamat IP aslinya tidak pernah disimpan.
+-- Dikosongkan setiap hari oleh bersihkan_harian().
+create table if not exists public.guest_creations (
+  id bigint generated always as identity primary key,
+  ip_hash text not null constraint guest_creations_hash_format check (ip_hash ~ '^[0-9a-f]{64}$'),
+  waktu timestamptz not null default now()
+);
+
+create index if not exists guest_creations_ip_waktu on public.guest_creations (ip_hash, waktu desc);
+
+alter table public.guest_creations enable row level security;
+-- Tidak ada policy dan tidak ada hak untuk anon/authenticated: hanya server iQRo yang bisa membaca.
+revoke all on public.guest_creations from anon, authenticated;
+grant select, insert, delete on public.guest_creations to service_role;
+
+-- Membuat link tamu. Dipanggil lib/link.ts (kunci secret) SETELAH link dicek Safe Browsing.
+-- Batas dihitung di sini juga, dalam satu transaksi, supaya 2 permintaan bersamaan tidak lolos berdua.
+-- Mengembalikan waktu kedaluwarsa link.
+create or replace function public.buat_link_tamu(
+  p_slug text,
+  p_tujuan text,
+  p_klaim_hash text,
+  p_ip_hash text
+)
+returns timestamptz
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_kedaluwarsa timestamptz := now() + interval '30 days';
+begin
+  if p_klaim_hash is null or p_klaim_hash !~ '^[0-9a-f]{64}$' then
+    raise exception 'klaim_tidak_valid' using errcode = 'P0001';
+  end if;
+
+  -- Antrekan permintaan dari IP yang sama (kunci dilepas otomatis di akhir transaksi).
+  perform pg_advisory_xact_lock(hashtextextended(p_ip_hash, 0));
+
+  if (
+    select count(*) from public.guest_creations
+    where ip_hash = p_ip_hash and waktu > now() - interval '24 hours'
+  ) >= 5 then
+    raise exception 'batas_tamu' using errcode = 'P0001';
+  end if;
+
+  -- Slug sudah dipakai → error 23505 dan seluruh fungsi batal (catatan di bawah tidak ikut tersimpan).
+  insert into public.links (slug, tujuan, pemilik_id, klaim_hash, kedaluwarsa)
+  values (p_slug, p_tujuan, null, p_klaim_hash, v_kedaluwarsa);
+
+  insert into public.guest_creations (ip_hash) values (p_ip_hash);
+  return v_kedaluwarsa;
+end;
+$$;
+
+revoke execute on function public.buat_link_tamu(text, text, text, text) from public, anon, authenticated;
+grant execute on function public.buat_link_tamu(text, text, text, text) to service_role;
+
+-- Memindahkan link tamu ke akun yang sedang login. p_token = kode rahasia dari penyimpanan
+-- browser pembuatnya; database hanya menyimpan hash-nya, jadi kode ini tidak bisa ditebak dari data.
+-- Hanya link tamu (belum punya pemilik), belum kedaluwarsa, dan tidak dinonaktifkan.
+-- Mengembalikan slug yang berhasil dipindah.
+create or replace function public.klaim_link_tamu(p_token text[])
+returns table (slug text)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'belum_masuk' using errcode = 'P0001';
+  end if;
+  if coalesce(cardinality(p_token), 0) > 50 then
+    raise exception 'terlalu_banyak' using errcode = 'P0001';
+  end if;
+
+  return query
+  update public.links l
+  set pemilik_id = auth.uid(), klaim_hash = null, kedaluwarsa = null
+  where l.pemilik_id is null
+    and not l.dinonaktifkan
+    and l.kedaluwarsa > now()
+    and l.klaim_hash in (
+      select encode(sha256(convert_to(t, 'UTF8')), 'hex') from unnest(p_token) t
+    )
+  returning l.slug;
+end;
+$$;
+
+revoke execute on function public.klaim_link_tamu(text[]) from public, anon, authenticated;
+grant execute on function public.klaim_link_tamu(text[]) to authenticated;
+
+-- Laporan link berbahaya dari halaman /laporkan. Fatih memeriksanya di Table Editor,
+-- lalu menonaktifkan link: kolom links.dinonaktifkan = true dan links.alasan diisi.
+create table if not exists public.reports (
+  id bigint generated always as identity primary key,
+  -- Link dihapus → laporannya ikut terhapus.
+  link_id uuid not null references public.links (id) on delete cascade,
+  alasan text not null
+    constraint reports_alasan_pilihan check (alasan in ('penipuan', 'malware', 'spam', 'lainnya')),
+  keterangan text constraint reports_keterangan_panjang check (char_length(keterangan) <= 500),
+  -- Sidik IP pelapor, hanya untuk batas 10 laporan per 24 jam. Dikosongkan setiap hari.
+  ip_hash text constraint reports_hash_format check (ip_hash ~ '^[0-9a-f]{64}$'),
+  dibuat timestamptz not null default now(),
+  ditangani boolean not null default false
+);
+
+create index if not exists reports_ip_dibuat on public.reports (ip_hash, dibuat desc)
+  where ip_hash is not null;
+
+alter table public.reports enable row level security;
+revoke all on public.reports from anon, authenticated;
+grant select, insert, update, delete on public.reports to service_role;
+
+-- Dipanggil lib/laporan.ts (kunci secret).
+create or replace function public.kirim_laporan(
+  p_slug text,
+  p_alasan text,
+  p_keterangan text,
+  p_ip_hash text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_link_id uuid;
+begin
+  select l.id into v_link_id from public.links l where l.slug = p_slug;
+  if v_link_id is null then
+    raise exception 'tidak_ada' using errcode = 'P0001';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended(p_ip_hash, 1));
+  if (
+    select count(*) from public.reports
+    where ip_hash = p_ip_hash and dibuat > now() - interval '24 hours'
+  ) >= 10 then
+    raise exception 'batas_laporan' using errcode = 'P0001';
+  end if;
+
+  insert into public.reports (link_id, alasan, keterangan, ip_hash)
+  values (v_link_id, p_alasan, nullif(p_keterangan, ''), p_ip_hash);
+end;
+$$;
+
+revoke execute on function public.kirim_laporan(text, text, text, text) from public, anon, authenticated;
+grant execute on function public.kirim_laporan(text, text, text, text) to service_role;
+
+-- Dipanggil cron harian Vercel (app/api/cron/harian/route.ts). Sekaligus menjaga project
+-- Supabase gratis tetap "aktif" (tidak di-pause karena sepi).
+create or replace function public.bersihkan_harian()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_tamu bigint;
+  v_laporan bigint;
+begin
+  delete from public.guest_creations where waktu < now() - interval '24 hours';
+  get diagnostics v_tamu = row_count;
+
+  update public.reports set ip_hash = null
+  where ip_hash is not null and dibuat < now() - interval '24 hours';
+  get diagnostics v_laporan = row_count;
+
+  return jsonb_build_object('catatan_tamu_dihapus', v_tamu, 'sidik_laporan_dihapus', v_laporan);
+end;
+$$;
+
+revoke execute on function public.bersihkan_harian() from public, anon, authenticated;
+grant execute on function public.bersihkan_harian() to service_role;

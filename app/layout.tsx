@@ -23,9 +23,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full">
         <HeaderSitus />
         {children}
-        <footer className="mx-auto max-w-5xl px-4 pb-8 text-sm">
+        <footer className="mx-auto flex max-w-5xl flex-wrap gap-x-6 gap-y-2 px-4 pb-8 text-sm">
           <Link href="/privasi" className={KELAS_TAUTAN}>
             Kebijakan Privasi
+          </Link>
+          <Link href="/laporkan" className={KELAS_TAUTAN}>
+            Laporkan link
           </Link>
         </footer>
         <Script src="/tema.js" strategy="beforeInteractive" />

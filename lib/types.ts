@@ -95,11 +95,40 @@ export type HasilAksiAkun =
 // Kolom form yang salah, supaya pesan galat tampil tepat di bawahnya (null = galat umum).
 export type KolomLink = "tujuan" | "slug";
 
+// Link yang dibuat tamu (tanpa akun). "token" = kode klaim, hanya dikirim sekali ke browser pembuatnya.
+export type LinkTamu = {
+  token: string;
+  kedaluwarsa: string; // ISO, mis. "2026-11-29T03:00:00Z"
+  berlakuSampaiTeks: string; // "29 Nov 2026"
+};
+
 // Hasil Server Action buatLinkPendek. "pendek" = link lengkap, mis. "https://iqro-alpha.vercel.app/menu-kopi".
+// tamu = null kalau dibuat oleh user yang sudah masuk (link permanen).
 export type HasilLinkPendek =
   | { status: "awal" }
   | { status: "galat"; pesan: string; kolom: KolomLink | null }
-  | { status: "berhasil"; slug: string; pendek: string; tujuan: string };
+  | { status: "berhasil"; slug: string; pendek: string; tujuan: string; tamu: LinkTamu | null };
+
+// Satu kode klaim yang disimpan di penyimpanan browser tamu (lib/klaim.ts).
+export type KlaimTamu = {
+  slug: string;
+  token: string;
+  kedaluwarsa: string; // ISO
+};
+
+// Hasil Server Action klaimLinkTamu. jumlah = link yang berhasil dipindah ke akun.
+export type HasilKlaim = { status: "berhasil"; jumlah: number } | { status: "galat"; pesan: string };
+
+// --- Laporan link (v2) ---
+
+export type AlasanLaporan = "penipuan" | "malware" | "spam" | "lainnya";
+
+export type KolomLaporan = "link" | "alasan" | "keterangan";
+
+export type HasilLaporan =
+  | { status: "awal" }
+  | { status: "galat"; pesan: string; kolom: KolomLaporan | null }
+  | { status: "terkirim" };
 
 // Satu baris di daftar dasbor. "dibuatTeks" sudah diformat di server, mis. "30 Okt 2026".
 export type LinkDasbor = {

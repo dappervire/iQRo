@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import FormLinkPendek from "@/components/FormLinkPendek";
+import { KELAS_TAUTAN } from "@/components/KotakAkun";
 import { ambilPengguna } from "@/lib/auth";
 import { alamatSitus } from "@/lib/situs";
 
@@ -11,39 +12,29 @@ const KELAS_PANEL = "mt-6 max-w-2xl rounded-md bg-permukaan p-5 sm:p-6";
 
 // Membaca login dan alamat situs saat ada pengunjung, jadi dibungkus <Suspense>.
 async function IsiPendek() {
-  // M8: khusus user. Tamu (M11) nanti boleh membuat link otomatis yang berlaku 30 hari.
+  // Tamu boleh membuat link acak yang berlaku 30 hari (M11); user dapat link permanen + nama sendiri.
   const pengguna = await ambilPengguna();
-  if (!pengguna) {
-    return (
-      <section className={KELAS_PANEL}>
-        <h2 className="text-lg font-semibold">Masuk dulu, gratis</h2>
-        <p className="mt-2 max-w-prose text-teks-redup">
-          Link pendek disimpan di akunmu, supaya bisa kamu kelola dan tetap jalan selama QR-nya
-          masih tertempel.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Link
-            href="/masuk?lanjut=/pendek"
-            className="inline-flex items-center justify-center rounded-md border border-aksen bg-aksen px-4 py-2.5 font-semibold text-teks-di-aksen hover:opacity-90"
-          >
-            Masuk
-          </Link>
-          <Link
-            href="/daftar"
-            className="inline-flex items-center justify-center rounded-md border border-garis bg-latar px-4 py-2.5 font-semibold text-teks hover:border-aksen"
-          >
-            Daftar
-          </Link>
-        </div>
-      </section>
-    );
-  }
-
   const domain = new URL(await alamatSitus()).host;
   return (
-    <section className={KELAS_PANEL}>
-      <FormLinkPendek domain={domain} />
-    </section>
+    <>
+      <section className={KELAS_PANEL}>
+        <FormLinkPendek domain={domain} tamu={!pengguna} />
+      </section>
+      {!pengguna && (
+        <p className="mt-4 max-w-2xl text-sm text-teks-redup">
+          Dengan akun (gratis): link permanen, nama link sendiri, tujuan bisa diubah, dan statistik
+          klik.{" "}
+          <Link href="/daftar" className={KELAS_TAUTAN}>
+            Daftar
+          </Link>{" "}
+          atau{" "}
+          <Link href="/masuk?lanjut=/pendek" className={KELAS_TAUTAN}>
+            masuk
+          </Link>
+          .
+        </p>
+      )}
+    </>
   );
 }
 
