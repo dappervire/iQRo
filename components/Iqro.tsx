@@ -1,7 +1,9 @@
 "use client";
 
-import { useReducer, type ReactNode } from "react";
+import { Suspense, useEffect, useReducer, type Dispatch, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import { reducer, stateAwal } from "@/lib/state";
+import type { Aksi } from "@/lib/types";
 import { normalisasiUrl } from "@/lib/validasi";
 import GayaQr from "./GayaQr";
 import LangkahLink from "./LangkahLink";
@@ -25,6 +27,16 @@ function Langkah({ judul, children }: LangkahProps) {
   );
 }
 
+// "Buat QR dari link ini" di /pendek membuka /?url=<link pendek>; isi langkah Link dari situ.
+// Hanya membaca alamat di browser (tidak ada server). Divalidasi normalisasiUrl() seperti ketikan biasa.
+function IsiDariAlamat({ dispatch }: { dispatch: Dispatch<Aksi> }) {
+  const url = useSearchParams().get("url");
+  useEffect(() => {
+    if (url) dispatch({ type: "ubahUrl", url });
+  }, [url, dispatch]);
+  return null;
+}
+
 export default function Iqro() {
   const [state, dispatch] = useReducer(reducer, stateAwal);
   const hasil = normalisasiUrl(state.url);
@@ -34,6 +46,10 @@ export default function Iqro() {
     // Logo, menu, dan tombol tema ada di HeaderSitus (app/layout.tsx).
     <main className="mx-auto max-w-5xl px-4 py-6 lg:pb-10">
       <h1 className="sr-only">iQRo — QR siap baca, siap cetak</h1>
+      {/* Suspense: halaman tetap disiapkan lebih awal; ?url= baru dibaca di browser. */}
+      <Suspense fallback={null}>
+        <IsiDariAlamat dispatch={dispatch} />
+      </Suspense>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px] lg:items-start">
         {/* Tiap langkah panel sendiri, dipisah jarak (bukan garis). */}

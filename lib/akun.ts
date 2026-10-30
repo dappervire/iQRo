@@ -3,10 +3,10 @@
 // Server Action untuk akun. Semua input divalidasi ulang di sini, karena data dari browser bisa diubah.
 
 import type { EmailOtpType } from "@supabase/supabase-js";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ambilPengguna } from "./auth";
 import { terjemahkanGalatAuth } from "./pesan-auth";
+import { alamatSitus } from "./situs";
 import { buatKlienServer } from "./supabase/server";
 import type { HasilAksiAkun } from "./types";
 import { SANDI_MAKS, jalurAman, validasiEmail, validasiSandiBaru } from "./validasi-akun";
@@ -18,17 +18,6 @@ function ambilTeks(form: FormData, nama: string): string {
 
 function ambilEmail(form: FormData): string {
   return ambilTeks(form, "email").trim().toLowerCase();
-}
-
-// Alamat situs yang sedang dibuka (localhost / Preview / produksi), untuk link di email.
-// Supabase tetap menolak alamat yang tidak ada di daftar Redirect URLs.
-async function alamatSitus(): Promise<string> {
-  const h = await headers();
-  const asal = h.get("origin");
-  if (asal) return asal;
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const protokol = h.get("x-forwarded-proto") ?? "https";
-  return `${protokol}://${host}`;
 }
 
 export async function masuk(_sebelum: HasilAksiAkun, form: FormData): Promise<HasilAksiAkun> {

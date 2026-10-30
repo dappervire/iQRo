@@ -89,3 +89,14 @@ export type HasilAksiAkun =
   | { status: "awal" }
   | { status: "galat"; pesan: string; email: string }
   | { status: "terkirim"; judul: string; pesan: string; lanjutan?: { href: string; label: string } };
+
+// --- Link pendek (v2) ---
+
+// Kolom form yang salah, supaya pesan galat tampil tepat di bawahnya (null = galat umum).
+export type KolomLink = "tujuan" | "slug";
+
+// Hasil Server Action buatLinkPendek. "pendek" = link lengkap, mis. "https://iqro-alpha.vercel.app/menu-kopi".
+export type HasilLinkPendek =
+  | { status: "awal" }
+  | { status: "galat"; pesan: string; kolom: KolomLink | null }
+  | { status: "berhasil"; slug: string; pendek: string; tujuan: string };

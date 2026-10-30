@@ -6,7 +6,7 @@ import { ambilPengguna } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Dasbor — iQRo" };
 
-// Sementara (M7) hanya menampilkan akun. Daftar link pendek menyusul di M8–M9.
+// Sementara hanya menampilkan akun. Daftar link pendek menyusul di M9.
 async function IsiDasbor() {
   // proxy.ts sudah mengalihkan tamu, tapi halaman tetap mengecek sendiri (jangan andalkan satu lapis).
   const pengguna = await ambilPengguna();
@@ -20,15 +20,23 @@ async function IsiDasbor() {
       <section className="mt-6 rounded-md bg-permukaan p-5 sm:p-6">
         <h2 className="text-lg font-semibold">Link pendekmu</h2>
         <p className="mt-2 max-w-prose text-teks-redup">
-          Belum ada link. Membuat dan mengelola link pendek sedang disiapkan; sementara itu kamu
-          tetap bisa membuat QR seperti biasa.
+          Daftar dan pengaturan link pendekmu sedang disiapkan. Sementara itu kamu sudah bisa
+          membuat link pendek dan QR-nya.
         </p>
-        <Link
-          href="/"
-          className="mt-5 inline-flex items-center justify-center rounded-md border border-aksen bg-aksen px-4 py-2.5 font-semibold text-teks-di-aksen hover:opacity-90"
-        >
-          Buat QR
-        </Link>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            href="/pendek"
+            className="inline-flex items-center justify-center rounded-md border border-aksen bg-aksen px-4 py-2.5 font-semibold text-teks-di-aksen hover:opacity-90"
+          >
+            Buat link pendek
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center rounded-md border border-garis bg-latar px-4 py-2.5 font-semibold text-teks hover:border-aksen"
+          >
+            Buat QR
+          </Link>
+        </div>
       </section>
     </>
   );
