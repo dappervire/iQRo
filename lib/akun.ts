@@ -2,6 +2,7 @@
 
 // Server Action untuk akun. Semua input divalidasi ulang di sini, karena data dari browser bisa diubah.
 
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ambilPengguna } from "./auth";
@@ -77,8 +78,37 @@ export async function daftar(_sebelum: HasilAksiAkun, form: FormData): Promise<H
   return {
     status: "terkirim",
     judul: "Cek emailmu",
-    pesan: `Kami mengirim link verifikasi ke ${email}. Buka link itu untuk mengaktifkan akun. Tidak ada? Cek folder Spam.`,
+    pesan: `Kami mengirim link verifikasi ke ${email}. Buka link itu (boleh dari HP), tekan "Aktifkan akun", lalu masuk. Tidak ada? Cek folder Spam.`,
+    lanjutan: { href: "/masuk", label: "Sudah klik link-nya? Masuk" },
   };
+}
+
+const JENIS_KONFIRMASI: EmailOtpType[] = ["email", "signup", "recovery"];
+
+// Dipanggil dari tombol di /auth/confirm, BUKAN langsung saat link email dibuka:
+// aplikasi email sering membuka link diam-diam lebih dulu, dan link Supabase hanya berlaku sekali.
+export async function konfirmasiEmail(
+  _sebelum: HasilAksiAkun,
+  form: FormData,
+): Promise<HasilAksiAkun> {
+  const tokenHash = ambilTeks(form, "token_hash");
+  const jenisMentah = ambilTeks(form, "type");
+  const jenis = JENIS_KONFIRMASI.find((j) => j === jenisMentah);
+  if (!jenis || !/^[\w-]{1,200}$/.test(tokenHash)) {
+    return { status: "galat", pesan: "Link tidak valid. Buka lagi link dari emailmu.", email: "" };
+  }
+
+  const supabase = await buatKlienServer();
+  const { error } = await supabase.auth.verifyOtp({ type: jenis, token_hash: tokenHash });
+  if (error) {
+    const pesan =
+      jenis === "recovery"
+        ? "Link ini sudah tidak berlaku. Minta link baru di halaman Lupa kata sandi."
+        : "Link ini sudah tidak berlaku. Kalau tadi akunmu sudah aktif, langsung masuk saja.";
+    return { status: "galat", pesan, email: "" };
+  }
+
+  redirect(jenis === "recovery" ? "/sandi-baru" : "/dasbor");
 }
 
 export async function lupaSandi(_sebelum: HasilAksiAkun, form: FormData): Promise<HasilAksiAkun> {

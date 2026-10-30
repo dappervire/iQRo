@@ -88,4 +88,4 @@ export type Pengguna = {
 export type HasilAksiAkun =
   | { status: "awal" }
   | { status: "galat"; pesan: string; email: string }
-  | { status: "terkirim"; judul: string; pesan: string };
+  | { status: "terkirim"; judul: string; pesan: string; lanjutan?: { href: string; label: string } };

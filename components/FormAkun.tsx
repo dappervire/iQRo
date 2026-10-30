@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { Eye, EyeOff, LoaderCircle, MailCheck } from "lucide-react";
 import Peringatan from "./Peringatan";
 import { SANDI_MIN } from "@/lib/validasi-akun";
@@ -14,7 +15,8 @@ type Props = {
   // "lama" = kata sandi yang sudah ada (masuk), "baru" = membuat kata sandi (daftar, ganti).
   sandi: "lama" | "baru" | null;
   tombol: string;
-  lanjut?: string;
+  // Data tambahan yang ikut terkirim tanpa terlihat, mis. { lanjut: "/dasbor" }.
+  tersembunyi?: Record<string, string>;
 };
 
 const KELAS_INPUT =
@@ -22,7 +24,7 @@ const KELAS_INPUT =
 
 const HASIL_AWAL: HasilAksiAkun = { status: "awal" };
 
-export default function FormAkun({ action, pakaiEmail, sandi, tombol, lanjut }: Props) {
+export default function FormAkun({ action, pakaiEmail, sandi, tombol, tersembunyi }: Props) {
   const [hasil, kirim, sedangKirim] = useActionState(action, HASIL_AWAL);
   const [lihatSandi, setLihatSandi] = useState(false);
 
@@ -33,6 +35,14 @@ export default function FormAkun({ action, pakaiEmail, sandi, tombol, lanjut }: 
         <div>
           <p className="font-semibold">{hasil.judul}</p>
           <p className="mt-1 break-words text-teks-redup">{hasil.pesan}</p>
+          {hasil.lanjutan && (
+            <Link
+              href={hasil.lanjutan.href}
+              className="mt-4 inline-flex items-center rounded-md border border-garis bg-latar px-4 py-2.5 font-semibold text-teks hover:border-aksen"
+            >
+              {hasil.lanjutan.label}
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -46,7 +56,10 @@ export default function FormAkun({ action, pakaiEmail, sandi, tombol, lanjut }: 
   return (
     // noValidate: pesan galat dari server kita (bahasa awam), bukan pesan bawaan browser.
     <form action={kirim} noValidate>
-      {lanjut && <input type="hidden" name="lanjut" value={lanjut} />}
+      {tersembunyi &&
+        Object.entries(tersembunyi).map(([nama, nilai]) => (
+          <input key={nama} type="hidden" name={nama} value={nilai} />
+        ))}
 
       <div className="space-y-5">
         {pakaiEmail && (
