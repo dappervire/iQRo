@@ -2,8 +2,18 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { Check, Copy, CornerDownRight, LoaderCircle, Pencil, QrCode, Trash2 } from "lucide-react";
+import {
+  ChartColumn,
+  Check,
+  Copy,
+  CornerDownRight,
+  LoaderCircle,
+  Pencil,
+  QrCode,
+  Trash2,
+} from "lucide-react";
 import Peringatan from "./Peringatan";
+import { formatAngka } from "@/lib/analitik";
 import { hapusLink, ubahTujuan } from "@/lib/link";
 import type { HasilUbahLink, LinkDasbor } from "@/lib/types";
 
@@ -59,11 +69,18 @@ export default function KartuLink({ link, asal }: Props) {
           {link.tujuan}
         </span>
       </p>
-      <p className="mt-1 text-sm text-teks-redup">Dibuat {link.dibuatTeks}</p>
+      <p className="mt-1 text-sm text-teks-redup">
+        Dibuat {link.dibuatTeks} ·{" "}
+        <span className="font-mono tabular-nums">{formatAngka(link.jumlahKlik)}</span> klik
+      </p>
 
       {mode === "lihat" && (
         <div className="mt-4 flex flex-wrap gap-2">
           <TombolSalin teks={pendek} />
+          <Link href={`/dasbor/${link.id}`} className={KELAS_AKSI}>
+            <ChartColumn aria-hidden="true" className="size-4" />
+            Statistik
+          </Link>
           <Link href={`/?url=${encodeURIComponent(pendek)}`} className={KELAS_AKSI}>
             <QrCode aria-hidden="true" className="size-4" />
             Buat QR

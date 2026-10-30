@@ -4,6 +4,7 @@ import Form from "next/form";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
+import DaftarPeringkat from "@/components/DaftarPeringkat";
 import HapusAkun from "@/components/HapusAkun";
 import KartuLink from "@/components/KartuLink";
 import { KELAS_TAUTAN } from "@/components/KotakAkun";
@@ -19,7 +20,7 @@ import {
 } from "@/lib/dasbor";
 import { alamatSitus } from "@/lib/situs";
 import { buatKlienServer } from "@/lib/supabase/server";
-import type { LinkDasbor, Pengguna } from "@/lib/types";
+import type { BarisPeringkat, LinkDasbor, Pengguna } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Dasbor — iQRo" };
 
@@ -31,6 +32,7 @@ const KELAS_TOMBOL_KEDUA =
   "inline-flex items-center justify-center gap-2 rounded-md border border-garis bg-permukaan px-4 py-2.5 font-semibold text-teks hover:border-aksen";
 // PostgREST: halaman yang diminta melewati jumlah data (mis. ?hal=99).
 const KODE_LEWAT_BATAS = "PGRST103";
+const TERPOPULER_MAKS = 3;
 
 function satuNilai(nilai: string | string[] | undefined): string | undefined {
   return Array.isArray(nilai) ? nilai[0] : nilai;
@@ -52,12 +54,31 @@ async function IsiDasbor({ searchParams }: { searchParams: ParamUrl }) {
   // RLS di database sudah membatasi ke link milik sendiri; filter pemilik_id = lapis kedua.
   let kueri = supabase
     .from("links")
-    .select("id, slug, tujuan, dibuat, kedaluwarsa, dinonaktifkan", { count: "exact" })
+    .select("id, slug, tujuan, dibuat, kedaluwarsa, dinonaktifkan, jumlah_klik", { count: "exact" })
     .eq("pemilik_id", pengguna.id);
   if (cari) kueri = kueri.or(`slug.ilike."%${cari}%",tujuan.ilike."%${cari}%"`);
-  const { data, count, error } = await kueri
-    .order("dibuat", { ascending: false })
-    .range(dari, dari + LINK_PER_HALAMAN - 1);
+  // Link terpopuler hanya di halaman 1 tanpa pencarian. Kedua kueri berjalan bersamaan.
+  const tampilkanTerpopuler = cari === "" && hal === 1;
+  const [{ data, count, error }, terpopuler] = await Promise.all([
+    kueri.order("dibuat", { ascending: false }).range(dari, dari + LINK_PER_HALAMAN - 1),
+    tampilkanTerpopuler
+      ? supabase
+          .from("links")
+          .select("id, slug, jumlah_klik")
+          .eq("pemilik_id", pengguna.id)
+          .gt("jumlah_klik", 0)
+          .order("jumlah_klik", { ascending: false })
+          .limit(TERPOPULER_MAKS)
+      : null,
+  ]);
+  if (terpopuler?.error) {
+    console.error("dasbor terpopuler:", terpopuler.error.code, terpopuler.error.message);
+  }
+  const barisTerpopuler: BarisPeringkat[] = (terpopuler?.data ?? []).map((l) => ({
+    label: `/${l.slug}`,
+    klik: Number(l.jumlah_klik) || 0,
+    href: `/dasbor/${l.id}`,
+  }));
 
   if (error?.code === KODE_LEWAT_BATAS) redirect(alamatDasbor(cari, 1));
   if (error) {
@@ -79,6 +100,7 @@ async function IsiDasbor({ searchParams }: { searchParams: ParamUrl }) {
     tujuan: l.tujuan,
     dibuatTeks: formatTanggal(l.dibuat),
     aktif: linkAktif(l.dinonaktifkan, l.kedaluwarsa),
+    jumlahKlik: Number(l.jumlah_klik) || 0,
   }));
   const total = count ?? 0;
   const jumlahHal = Math.max(1, Math.ceil(total / LINK_PER_HALAMAN));
@@ -86,6 +108,18 @@ async function IsiDasbor({ searchParams }: { searchParams: ParamUrl }) {
 
   return (
     <>
+      {barisTerpopuler.length > 0 && (
+        <div className="mt-8">
+          <DaftarPeringkat
+            judul="Paling sering dibuka"
+            tingkatJudul="h2"
+            baris={barisTerpopuler}
+            pembanding={barisTerpopuler[0].klik}
+            catatan="Jumlah klik sejak link dibuat. Ketuk nama link untuk melihat statistiknya."
+          />
+        </div>
+      )}
+
       <section className="mt-8" aria-labelledby="judul-link">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <h2 id="judul-link" className="text-lg font-semibold">

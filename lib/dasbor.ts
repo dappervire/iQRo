@@ -28,12 +28,19 @@ export function alamatDasbor(cari: string, hal: number): string {
   return teks ? `/dasbor?${teks}` : "/dasbor";
 }
 
+const POLA_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// id link (dari form atau alamat /dasbor/[id]) hanya dipakai kalau bentuknya benar-benar uuid.
+export function formatIdBenar(id: string): boolean {
+  return POLA_ID.test(id);
+}
+
 // Link bisa dibuka kalau tidak dinonaktifkan dan belum kedaluwarsa (null = tidak pernah kedaluwarsa).
 export function linkAktif(dinonaktifkan: boolean, kedaluwarsa: string | null): boolean {
   return !dinonaktifkan && (kedaluwarsa === null || Date.parse(kedaluwarsa) > Date.now());
 }
 
-const FORMAT_TANGGAL =new Intl.DateTimeFormat("id-ID", {
+const FORMAT_TANGGAL = new Intl.DateTimeFormat("id-ID", {
   day: "numeric",
   month: "short",
   year: "numeric",

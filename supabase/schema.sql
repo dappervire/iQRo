@@ -1,7 +1,7 @@
 -- iQRo — skema database link pendek.
 -- Cara pakai: Supabase → SQL Editor → New query → tempel SELURUH isi file ini → Run.
 -- Aman dijalankan ulang (if not exists / or replace / drop ... if exists).
--- Bagian milestone berikutnya (clicks, reports, guest_creations) ditambahkan di bawah nanti.
+-- Bagian milestone berikutnya (reports, guest_creations) ditambahkan di bawah nanti.
 
 -- ============================================================
 -- M8: tabel links
@@ -68,14 +68,17 @@ create policy "links: hapus milik sendiri" on public.links
 -- Trigger
 -- ------------------------------------------------------------
 
--- Kolom "diubah" selalu diisi waktu sekarang setiap kali link diubah.
+-- Kolom "diubah" diisi waktu sekarang setiap kali link diubah.
+-- Pengecualian (M10): kalau yang berubah hanya jumlah_klik (ada yang klik), "diubah" tidak disentuh.
 create or replace function public.links_isi_diubah()
 returns trigger
 language plpgsql
 set search_path = ''
 as $$
 begin
-  new.diubah := now();
+  if (to_jsonb(new) - 'jumlah_klik' - 'diubah') is distinct from (to_jsonb(old) - 'jumlah_klik' - 'diubah') then
+    new.diubah := now();
+  end if;
   return new;
 end;
 $$;
@@ -155,3 +158,142 @@ $$;
 
 revoke execute on function public.hapus_akun_saya() from public, anon, authenticated;
 grant execute on function public.hapus_akun_saya() to authenticated;
+
+-- ============================================================
+-- M10: analitik klik
+-- ============================================================
+
+-- Satu baris = satu kali link dibuka. Sengaja TANPA alamat IP dan tanpa data pribadi lain.
+create table if not exists public.clicks (
+  id bigint generated always as identity primary key,
+  -- Link dihapus (atau akunnya dihapus) → semua kliknya ikut terhapus.
+  link_id uuid not null references public.links (id) on delete cascade,
+  waktu timestamptz not null default now(),
+  -- Hanya nama situs asal (mis. instagram.com), bukan alamat lengkap halamannya. null = langsung / scan QR.
+  perujuk_domain text
+    constraint clicks_perujuk_format check (perujuk_domain ~ '^[a-z0-9.-]{1,253}$'),
+  perangkat text not null default 'lainnya'
+    constraint clicks_perangkat_pilihan check (perangkat in ('hp', 'tablet', 'komputer', 'lainnya')),
+  -- Kode negara 2 huruf dari Vercel (mis. ID). null = tidak diketahui (mis. saat dicoba di localhost).
+  negara text
+    constraint clicks_negara_format check (negara ~ '^[A-Z]{2}$')
+);
+
+-- Mempercepat "klik link ini dalam 30 hari terakhir".
+create index if not exists clicks_link_waktu on public.clicks (link_id, waktu desc);
+
+alter table public.clicks enable row level security;
+
+-- User hanya boleh MEMBACA klik dari link miliknya. Tidak ada yang boleh menulis langsung;
+-- klik baru hanya masuk lewat fungsi catat_klik() di bawah.
+revoke all on public.clicks from anon, authenticated;
+grant select on public.clicks to authenticated;
+
+drop policy if exists "clicks: baca milik sendiri" on public.clicks;
+create policy "clicks: baca milik sendiri" on public.clicks
+  for select to authenticated
+  using (exists (
+    select 1 from public.links l
+    where l.id = link_id and l.pemilik_id = (select auth.uid())
+  ));
+
+-- Dipanggil app/[slug]/route.ts SETELAH pengunjung dialihkan (lewat after()).
+-- Pengunjung tidak login, jadi fungsi ini security definer. Semua masukan dicek ulang di sini:
+-- link harus ada & aktif, nilai yang aneh dibuang (bukan disimpan).
+create or replace function public.catat_klik(
+  p_link_id uuid,
+  p_perujuk text,
+  p_perangkat text,
+  p_negara text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not exists (
+    select 1 from public.links l
+    where l.id = p_link_id
+      and not l.dinonaktifkan
+      and (l.kedaluwarsa is null or l.kedaluwarsa > now())
+  ) then
+    return;
+  end if;
+
+  insert into public.clicks (link_id, perujuk_domain, perangkat, negara)
+  values (
+    p_link_id,
+    case when p_perujuk ~ '^[a-z0-9.-]{1,253}$' then p_perujuk end,
+    case when p_perangkat in ('hp', 'tablet', 'komputer') then p_perangkat else 'lainnya' end,
+    case when p_negara ~ '^[A-Z]{2}$' then p_negara end
+  );
+
+  update public.links set jumlah_klik = jumlah_klik + 1 where id = p_link_id;
+end;
+$$;
+
+revoke execute on function public.catat_klik(uuid, text, text, text) from public, anon, authenticated;
+grant execute on function public.catat_klik(uuid, text, text, text) to anon, authenticated;
+
+-- Ringkasan statistik satu link untuk halaman /dasbor/[id]. Semua hitungan memakai jam WIB.
+-- security invoker = berjalan dengan hak user yang memanggil, jadi RLS tetap berlaku:
+-- link milik orang lain hasilnya kosong (nol semua).
+create or replace function public.statistik_link(p_link_id uuid)
+returns jsonb
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  with
+  hari_ini as (
+    select (now() at time zone 'Asia/Jakarta')::date as tanggal
+  ),
+  klik as (
+    select c.waktu, c.perujuk_domain, c.perangkat, c.negara
+    from public.clicks c, hari_ini
+    where c.link_id = p_link_id
+      and c.waktu >= ((hari_ini.tanggal - 29)::timestamp at time zone 'Asia/Jakarta')
+  ),
+  per_hari as (
+    select (waktu at time zone 'Asia/Jakarta')::date as tanggal, count(*) as klik
+    from klik
+    group by 1
+  ),
+  hari as (
+    select d::date as tanggal
+    from hari_ini,
+      generate_series((hari_ini.tanggal - 29)::timestamp, hari_ini.tanggal::timestamp, interval '1 day') d
+  )
+  select jsonb_build_object(
+    -- 30 baris, dari 29 hari lalu sampai hari ini; hari tanpa klik = 0.
+    'harian', (
+      select jsonb_agg(jsonb_build_object('tanggal', h.tanggal, 'klik', coalesce(p.klik, 0)) order by h.tanggal)
+      from hari h left join per_hari p using (tanggal)
+    ),
+    -- 5 situs asal terbanyak (nama null = langsung / scan QR).
+    'perujuk', coalesce((
+      select jsonb_agg(jsonb_build_object('nama', x.nama, 'klik', x.klik) order by x.klik desc, x.nama)
+      from (
+        select perujuk_domain as nama, count(*) as klik from klik
+        group by perujuk_domain order by count(*) desc, perujuk_domain limit 5
+      ) x
+    ), '[]'::jsonb),
+    'perangkat', coalesce((
+      select jsonb_agg(jsonb_build_object('nama', x.nama, 'klik', x.klik) order by x.klik desc, x.nama)
+      from (select perangkat as nama, count(*) as klik from klik group by perangkat) x
+    ), '[]'::jsonb),
+    -- 5 negara terbanyak (nama null = tidak diketahui).
+    'negara', coalesce((
+      select jsonb_agg(jsonb_build_object('nama', x.nama, 'klik', x.klik) order by x.klik desc, x.nama)
+      from (
+        select negara as nama, count(*) as klik from klik
+        group by negara order by count(*) desc, negara limit 5
+      ) x
+    ), '[]'::jsonb)
+  );
+$$;
+
+revoke execute on function public.statistik_link(uuid) from public, anon, authenticated;
+grant execute on function public.statistik_link(uuid) to authenticated;

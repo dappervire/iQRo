@@ -5,6 +5,7 @@
 
 import { refresh } from "next/cache";
 import { ambilPengguna } from "./auth";
+import { formatIdBenar } from "./dasbor";
 import { DOMAIN_UTAMA, alamatSitus } from "./situs";
 import { rapikanSlug, slugOtomatis, validasiSlug } from "./slug";
 import { buatKlienServer } from "./supabase/server";
@@ -13,7 +14,6 @@ import { normalisasiUrl } from "./validasi";
 
 const COBA_SLUG_OTOMATIS = 5;
 const KODE_SUDAH_ADA = "23505"; // kode Postgres: nilai unik sudah ada (slug terpakai)
-const POLA_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const PESAN_SESI_HABIS = "Sesi masukmu sudah habis. Masuk lagi, lalu coba sekali lagi.";
 const PESAN_TIDAK_ADA = "Link ini tidak ditemukan. Mungkin sudah dihapus; muat ulang halaman ini.";
@@ -50,7 +50,7 @@ async function periksaTujuan(
 // id link dari form, hanya kalau bentuknya benar-benar uuid.
 function ambilId(form: FormData): string | null {
   const id = ambilTeks(form, "id");
-  return POLA_ID.test(id) ? id : null;
+  return formatIdBenar(id) ? id : null;
 }
 
 export async function buatLinkPendek(

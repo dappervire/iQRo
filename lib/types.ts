@@ -108,6 +108,7 @@ export type LinkDasbor = {
   tujuan: string;
   dibuatTeks: string;
   aktif: boolean;
+  jumlahKlik: number;
 };
 
 // Hasil Server Action ubahTujuan dan hapusLink di dasbor.
@@ -115,3 +116,37 @@ export type HasilUbahLink =
   | { status: "awal" }
   | { status: "galat"; pesan: string }
   | { status: "berhasil" };
+
+// --- Analitik (v2) ---
+
+export type Perangkat = "hp" | "tablet" | "komputer" | "lainnya";
+
+// Data satu klik yang dicatat (lib/klik.ts). Tidak ada alamat IP.
+export type DataKlik = {
+  perangkat: Perangkat;
+  perujukDomain: string | null; // null = langsung / scan QR
+  negara: string | null; // kode 2 huruf, mis. "ID"
+};
+
+// Satu hari di grafik. "teks" sudah diformat, mis. "Jum, 30 Okt".
+export type KlikHarian = {
+  tanggal: string; // "2026-10-30"
+  klik: number;
+  teks: string;
+  teksPendek: string; // "30 Okt"
+};
+
+// Satu baris daftar peringkat (perujuk, perangkat, negara, link terpopuler).
+export type BarisPeringkat = {
+  label: string;
+  klik: number;
+  href?: string;
+};
+
+// Hasil fungsi database statistik_link(), sudah dicek bentuknya dan diberi label bahasa Indonesia.
+export type StatistikLink = {
+  harian: KlikHarian[];
+  perujuk: BarisPeringkat[];
+  perangkat: BarisPeringkat[];
+  negara: BarisPeringkat[];
+};
