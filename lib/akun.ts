@@ -67,7 +67,7 @@ export async function daftar(_sebelum: HasilAksiAkun, form: FormData): Promise<H
   return {
     status: "terkirim",
     judul: "Cek emailmu",
-    pesan: `Kami mengirim link verifikasi ke ${email}. Buka link itu (boleh dari HP), tekan "Aktifkan akun", lalu masuk. Tidak ada? Cek folder Spam.`,
+    pesan: `Kami mengirim link verifikasi ke ${email}. Buka link itu (boleh dari HP), lalu masuk. Tidak ada? Cek folder Spam.`,
     lanjutan: { href: "/masuk", label: "Sudah klik link-nya? Masuk" },
   };
 }
@@ -100,6 +100,33 @@ export async function konfirmasiEmail(
   redirect(jenis === "recovery" ? "/sandi-baru" : "/dasbor");
 }
 
+// Email bawaan Supabase (paket gratis tanpa SMTP sendiri, template tidak bisa diubah):
+// Supabase memverifikasi email lebih dulu, lalu membuka /auth/confirm?code=...
+// Kode hanya bisa ditukar jadi sesi login di browser yang tadi mendaftar / meminta ganti sandi.
+export async function tukarKodeEmail(
+  _sebelum: HasilAksiAkun,
+  form: FormData,
+): Promise<HasilAksiAkun> {
+  const kode = ambilTeks(form, "code");
+  if (!/^[\w-]{1,200}$/.test(kode)) {
+    return { status: "galat", pesan: "Link tidak valid. Buka lagi link dari emailmu.", email: "" };
+  }
+
+  const supabase = await buatKlienServer();
+  const { data, error } = await supabase.auth.exchangeCodeForSession(kode);
+  if (error) {
+    return {
+      status: "galat",
+      pesan: "Link ini sudah terpakai. Kalau tadi kamu mendaftar, akunmu sudah aktif: langsung masuk saja.",
+      email: "",
+    };
+  }
+
+  // redirectType ada saat berjalan tapi tidak tercantum di tipe TypeScript-nya, jadi dicek dulu dengan "in".
+  const gantiSandi = "redirectType" in data && data.redirectType === "recovery";
+  redirect(gantiSandi ? "/sandi-baru" : "/dasbor");
+}
+
 export async function lupaSandi(_sebelum: HasilAksiAkun, form: FormData): Promise<HasilAksiAkun> {
   const email = ambilEmail(form);
   const galatEmail = validasiEmail(email);
@@ -115,7 +142,7 @@ export async function lupaSandi(_sebelum: HasilAksiAkun, form: FormData): Promis
   return {
     status: "terkirim",
     judul: "Cek emailmu",
-    pesan: `Kalau ${email} terdaftar, link untuk membuat kata sandi baru sudah dikirim. Tidak ada? Cek folder Spam.`,
+    pesan: `Kalau ${email} terdaftar, link untuk membuat kata sandi baru sudah dikirim. Buka link itu di browser ini juga. Tidak ada? Cek folder Spam.`,
   };
 }
 

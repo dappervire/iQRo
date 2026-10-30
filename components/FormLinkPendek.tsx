@@ -133,7 +133,8 @@ type HasilProps = {
 
 function HasilLink({ hasil, onBaru }: HasilProps) {
   const [salin, setSalin] = useState<"siap" | "tersalin" | "gagal">("siap");
-  const tampil = hasil.pendek.replace(/^https?:\/\//, "");
+  // Domain tanpa "https://", mis. "iqro-alpha.vercel.app".
+  const domain = hasil.pendek.replace(/^https?:\/\//, "").slice(0, -(hasil.slug.length + 1));
 
   async function salinLink() {
     try {
@@ -157,9 +158,11 @@ function HasilLink({ hasil, onBaru }: HasilProps) {
           href={hasil.pendek}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 block break-all text-2xl font-bold tracking-tight text-aksen underline-offset-4 hover:underline"
+          className="mt-3 block break-words text-xl font-bold tracking-tight text-aksen underline-offset-4 hover:underline sm:text-2xl"
         >
-          {tampil}
+          {/* <wbr />: kalau tidak muat satu baris, patah sebelum "/nama", bukan di tengah kata. */}
+          {domain}
+          <wbr />/{hasil.slug}
         </a>
         <p className="mt-2 break-all text-sm text-teks-redup">Menuju {hasil.tujuan}</p>
       </div>
