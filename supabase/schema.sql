@@ -131,3 +131,27 @@ $$;
 
 revoke execute on function public.cari_link(text) from public, anon, authenticated;
 grant execute on function public.cari_link(text) to anon, authenticated;
+
+-- ============================================================
+-- M9: hapus akun sendiri (tombol "Hapus akun" di dasbor, lib/akun.ts)
+-- ============================================================
+
+-- User biasa tidak boleh menyentuh auth.users. Fungsi ini berjalan dengan hak pemiliknya
+-- (security definer), tapi HANYA menghapus akun yang sedang login (auth.uid()), tidak bisa akun lain.
+-- Link milik akun itu ikut terhapus lewat "on delete cascade" di tabel links.
+create or replace function public.hapus_akun_saya()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'belum_masuk' using errcode = 'P0001';
+  end if;
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+
+revoke execute on function public.hapus_akun_saya() from public, anon, authenticated;
+grant execute on function public.hapus_akun_saya() to authenticated;

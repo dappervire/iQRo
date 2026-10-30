@@ -3,6 +3,7 @@
 // Server Action untuk akun. Semua input divalidasi ulang di sini, karena data dari browser bisa diubah.
 
 import type { EmailOtpType } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ambilPengguna } from "./auth";
 import { terjemahkanGalatAuth } from "./pesan-auth";
@@ -166,6 +167,46 @@ export async function gantiSandi(_sebelum: HasilAksiAkun, form: FormData): Promi
   if (error) return { status: "galat", pesan: terjemahkanGalatAuth(error), email: "" };
 
   redirect("/dasbor");
+}
+
+// Hapus akun sendiri (dasbor). Wajib mengetik ulang email akun sebagai konfirmasi.
+export async function hapusAkun(_sebelum: HasilAksiAkun, form: FormData): Promise<HasilAksiAkun> {
+  const pengguna = await ambilPengguna();
+  if (!pengguna) {
+    return {
+      status: "galat",
+      pesan: "Sesi masukmu sudah habis. Masuk lagi, lalu coba sekali lagi.",
+      email: "",
+    };
+  }
+
+  const email = ambilEmail(form);
+  if (email === "") return { status: "galat", pesan: "Ketik email akunmu dulu.", email };
+  if (email !== pengguna.email.toLowerCase()) {
+    return { status: "galat", pesan: "Email tidak sama dengan email akunmu.", email };
+  }
+
+  const supabase = await buatKlienServer();
+  // Fungsi database ini hanya bisa menghapus akun yang sedang login (lihat supabase/schema.sql).
+  const { error } = await supabase.rpc("hapus_akun_saya");
+  if (error) {
+    console.error("hapusAkun:", error.code, error.message);
+    return {
+      status: "galat",
+      pesan: "Akun belum bisa dihapus karena ada gangguan. Coba lagi sebentar lagi.",
+      email,
+    };
+  }
+
+  // Sesi di Supabase sudah ikut terhapus bersama akunnya. Tinggal buang cookie login di browser ini
+  // (semua cookie Supabase berawalan "sb-").
+  const toko = await cookies();
+  toko
+    .getAll()
+    .filter((c) => c.name.startsWith("sb-"))
+    .forEach((c) => toko.delete(c.name));
+
+  redirect("/akun-dihapus");
 }
 
 export async function keluar(): Promise<void> {

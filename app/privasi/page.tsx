@@ -6,9 +6,6 @@ export const metadata: Metadata = {
   description: "Data apa yang disimpan iQRo, untuk apa, dan di mana.",
 };
 
-// Isi dengan email yang boleh tampil publik untuk permintaan hapus akun. Kosong = kalimat cadangan.
-const EMAIL_KONTAK: string = "";
-
 function Bagian({ judul, children }: { judul: string; children: ReactNode }) {
   return (
     <section className="mt-10">
@@ -89,20 +86,11 @@ export default function HalamanPrivasi() {
         </Bagian>
 
         <Bagian judul="Menghapus akun">
-          {EMAIL_KONTAK ? (
-            <p>
-              Ingin akun dan semua link-mu dihapus? Kirim email dari alamat akunmu ke{" "}
-              <a
-                href={`mailto:${EMAIL_KONTAK}`}
-                className="break-all font-semibold text-aksen underline underline-offset-4 hover:no-underline"
-              >
-                {EMAIL_KONTAK}
-              </a>
-              .
-            </p>
-          ) : (
-            <p>Cara meminta penghapusan akun akan ditambahkan di halaman ini.</p>
-          )}
+          <p>
+            Kamu bisa menghapus akunmu sendiri kapan saja lewat tombol Hapus akun di Dasbor.
+            Akunmu, semua link pendekmu, dan statistik kliknya langsung terhapus permanen dan tidak
+            bisa dikembalikan.
+          </p>
         </Bagian>
       </article>
     </main>

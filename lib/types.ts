@@ -100,3 +100,18 @@ export type HasilLinkPendek =
   | { status: "awal" }
   | { status: "galat"; pesan: string; kolom: KolomLink | null }
   | { status: "berhasil"; slug: string; pendek: string; tujuan: string };
+
+// Satu baris di daftar dasbor. "dibuatTeks" sudah diformat di server, mis. "30 Okt 2026".
+export type LinkDasbor = {
+  id: string;
+  slug: string;
+  tujuan: string;
+  dibuatTeks: string;
+  aktif: boolean;
+};
+
+// Hasil Server Action ubahTujuan dan hapusLink di dasbor.
+export type HasilUbahLink =
+  | { status: "awal" }
+  | { status: "galat"; pesan: string }
+  | { status: "berhasil" };

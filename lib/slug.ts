@@ -27,6 +27,7 @@ const KATA_TERLARANG = new Set([
   "lupa-sandi",
   "sandi-baru",
   "link-tidak-aktif",
+  "akun-dihapus",
   "keluar",
   "akun",
   "admin",
