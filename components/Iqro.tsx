@@ -1,12 +1,12 @@
 "use client";
 
-import { useReducer, type ReactNode } from "react";
+import { Suspense, useEffect, useReducer, type Dispatch, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import { reducer, stateAwal } from "@/lib/state";
+import type { Aksi } from "@/lib/types";
 import { normalisasiUrl } from "@/lib/validasi";
 import GayaQr from "./GayaQr";
-import IqroLogo from "./IqroLogo";
 import LangkahLink from "./LangkahLink";
-import PilihTema from "./PilihTema";
 import PilihTemplate from "./PilihTemplate";
 import PreviewQr from "./PreviewQr";
 import PreviewTemplate from "./PreviewTemplate";
@@ -27,23 +27,29 @@ function Langkah({ judul, children }: LangkahProps) {
   );
 }
 
+// "Buat QR dari link ini" di /pendek membuka /?url=<link pendek>; isi langkah Link dari situ.
+// Hanya membaca alamat di browser (tidak ada server). Divalidasi normalisasiUrl() seperti ketikan biasa.
+function IsiDariAlamat({ dispatch }: { dispatch: Dispatch<Aksi> }) {
+  const url = useSearchParams().get("url");
+  useEffect(() => {
+    if (url) dispatch({ type: "ubahUrl", url });
+  }, [url, dispatch]);
+  return null;
+}
+
 export default function Iqro() {
   const [state, dispatch] = useReducer(reducer, stateAwal);
   const hasil = normalisasiUrl(state.url);
   const dataQr = hasil.ok ? hasil.url : null;
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-6 lg:py-10">
-      <header className="mb-6 flex items-center justify-between gap-4 border-b border-garis pb-4">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <h1>
-            <IqroLogo className="size-10 text-teks lg:size-12" />
-            <span className="sr-only"> — QR siap baca, siap cetak</span>
-          </h1>
-          <p className="text-sm text-teks-redup">QR siap baca, siap cetak.</p>
-        </div>
-        <PilihTema />
-      </header>
+    // Logo, menu, dan tombol tema ada di HeaderSitus (app/layout.tsx).
+    <main className="mx-auto max-w-5xl px-4 py-6 lg:pb-10">
+      <h1 className="sr-only">iQRo — QR siap baca, siap cetak</h1>
+      {/* Suspense: halaman tetap disiapkan lebih awal; ?url= baru dibaca di browser. */}
+      <Suspense fallback={null}>
+        <IsiDariAlamat dispatch={dispatch} />
+      </Suspense>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px] lg:items-start">
         {/* Tiap langkah panel sendiri, dipisah jarak (bukan garis). */}

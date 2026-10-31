@@ -75,3 +75,107 @@ export type CekWarna = {
 export type HasilUrl =
   | { ok: true; url: string; peringatan: string | null }
   | { ok: false; error: string | null };
+
+// --- Akun (v2) ---
+
+// Data login yang sudah diverifikasi server (dari getClaims), bukan kiriman browser.
+export type Pengguna = {
+  id: string;
+  email: string;
+};
+
+// Hasil Server Action di form akun. "terkirim" = email (verifikasi / ganti sandi) sudah dikirim.
+export type HasilAksiAkun =
+  | { status: "awal" }
+  | { status: "galat"; pesan: string; email: string }
+  | { status: "terkirim"; judul: string; pesan: string; lanjutan?: { href: string; label: string } };
+
+// --- Link pendek (v2) ---
+
+// Kolom form yang salah, supaya pesan galat tampil tepat di bawahnya (null = galat umum).
+export type KolomLink = "tujuan" | "slug";
+
+// Link yang dibuat tamu (tanpa akun). "token" = kode klaim, hanya dikirim sekali ke browser pembuatnya.
+export type LinkTamu = {
+  token: string;
+  kedaluwarsa: string; // ISO, mis. "2026-11-29T03:00:00Z"
+  berlakuSampaiTeks: string; // "29 Nov 2026"
+};
+
+// Hasil Server Action buatLinkPendek. "pendek" = link lengkap, mis. "https://iqro-alpha.vercel.app/menu-kopi".
+// tamu = null kalau dibuat oleh user yang sudah masuk (link permanen).
+export type HasilLinkPendek =
+  | { status: "awal" }
+  | { status: "galat"; pesan: string; kolom: KolomLink | null }
+  | { status: "berhasil"; slug: string; pendek: string; tujuan: string; tamu: LinkTamu | null };
+
+// Satu kode klaim yang disimpan di penyimpanan browser tamu (lib/klaim.ts).
+export type KlaimTamu = {
+  slug: string;
+  token: string;
+  kedaluwarsa: string; // ISO
+};
+
+// Hasil Server Action klaimLinkTamu. jumlah = link yang berhasil dipindah ke akun.
+export type HasilKlaim = { status: "berhasil"; jumlah: number } | { status: "galat"; pesan: string };
+
+// --- Laporan link (v2) ---
+
+export type AlasanLaporan = "penipuan" | "malware" | "spam" | "lainnya";
+
+export type KolomLaporan = "link" | "alasan" | "keterangan";
+
+export type HasilLaporan =
+  | { status: "awal" }
+  | { status: "galat"; pesan: string; kolom: KolomLaporan | null }
+  | { status: "terkirim" };
+
+// Satu baris di daftar dasbor. "dibuatTeks" sudah diformat di server, mis. "30 Okt 2026".
+export type LinkDasbor = {
+  id: string;
+  slug: string;
+  tujuan: string;
+  dibuatTeks: string;
+  aktif: boolean;
+  jumlahKlik: number;
+};
+
+// Hasil Server Action ubahTujuan dan hapusLink di dasbor.
+export type HasilUbahLink =
+  | { status: "awal" }
+  | { status: "galat"; pesan: string }
+  | { status: "berhasil" };
+
+// --- Analitik (v2) ---
+
+export type Perangkat = "hp" | "tablet" | "komputer" | "lainnya";
+
+// Data satu klik yang dicatat (lib/klik.ts). Tidak ada alamat IP.
+export type DataKlik = {
+  perangkat: Perangkat;
+  perujukDomain: string | null; // null = langsung / scan QR
+  negara: string | null; // kode 2 huruf, mis. "ID"
+};
+
+// Satu hari di grafik. "teks" sudah diformat, mis. "Jum, 30 Okt".
+export type KlikHarian = {
+  tanggal: string; // "2026-10-30"
+  klik: number;
+  teks: string;
+  teksPendek: string; // "30 Okt"
+};
+
+// Satu baris daftar peringkat (perujuk, perangkat, negara, link terpopuler).
+export type BarisPeringkat = {
+  label: string;
+  klik: number;
+  href?: string;
+};
+
+// Hasil fungsi database statistik_link(), sudah dicek bentuknya dan diberi label bahasa Indonesia.
+export type StatistikLink = {
+  harian: KlikHarian[];
+  perujuk: BarisPeringkat[];
+  perangkat: BarisPeringkat[];
+  negara: BarisPeringkat[];
+};

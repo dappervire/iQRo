@@ -77,6 +77,12 @@ body {
   @apply bg-latar font-sans text-teks;
 }
 
+/* Teks yang diblok (diseleksi) ikut palet, bukan biru bawaan browser. */
+::selection {
+  background: var(--aksen);
+  color: var(--teks-di-aksen);
+}
+
 /* Fokus keyboard selalu terlihat, dengan warna aksen. */
 :focus-visible {
   outline: 2px solid var(--aksen);
