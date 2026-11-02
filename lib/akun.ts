@@ -135,7 +135,8 @@ export async function lupaSandi(_sebelum: HasilAksiAkun, form: FormData): Promis
 
   const supabase = await buatKlienServer();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${await alamatSitus()}/auth/confirm`,
+    // ?untuk=sandi: supaya /auth/confirm tahu ini link ganti sandi walau dibuka di perangkat lain.
+    redirectTo: `${await alamatSitus()}/auth/confirm?untuk=sandi`,
   });
   if (error) return { status: "galat", pesan: terjemahkanGalatAuth(error), email };
 
@@ -143,7 +144,7 @@ export async function lupaSandi(_sebelum: HasilAksiAkun, form: FormData): Promis
   return {
     status: "terkirim",
     judul: "Cek emailmu",
-    pesan: `Kalau ${email} terdaftar, link untuk membuat kata sandi baru sudah dikirim. Buka link itu di browser ini juga. Tidak ada? Cek folder Spam.`,
+    pesan: `Kalau ${email} terdaftar, link untuk membuat kata sandi baru sudah dikirim. Buka link-nya di browser ini juga, jangan di perangkat, browser, atau profil lain. Tidak ada? Cek folder Spam.`,
   };
 }
 

@@ -30,6 +30,7 @@ async function IsiKonfirmasi({ searchParams }: { searchParams: ParamUrl }) {
   const jenis = satuNilai(param.type);
   const kode = satuNilai(param.code);
   const galat = satuNilai(param.error_code) || satuNilai(param.error);
+  const untukSandi = satuNilai(param.untuk) === "sandi";
 
   if (tokenHash && ["email", "signup", "recovery"].includes(jenis)) {
     const gantiSandi = jenis === "recovery";
@@ -71,6 +72,39 @@ async function IsiKonfirmasi({ searchParams }: { searchParams: ParamUrl }) {
             tombol="Lanjutkan"
             tersembunyi={{ code: kode }}
           />
+        </KotakAkun>
+      );
+    }
+
+    if (untukSandi) {
+      // Mis. minta ganti sandi di Chrome, link terbuka di aplikasi Gmail / profil lain / perangkat lain.
+      // Link di email sudah terpakai, tapi kode di alamat halaman ini belum: kalau alamat ini dibuka
+      // di browser peminta dalam beberapa menit, tombol "Lanjutkan" di atas akan muncul di sana.
+      return (
+        <KotakAkun
+          judul="Buka di browser yang sama"
+          deskripsi="Link ganti kata sandi hanya berfungsi di browser tempat kamu memintanya."
+        >
+          <p>
+            Masih di perangkat yang sama? Segera pindahkan halaman ini ke browser tempat kamu
+            menekan Kirim:
+          </p>
+          <ul className="mt-3 list-disc space-y-2 pl-5">
+            <li>
+              Di HP (terbuka di dalam aplikasi Gmail): tekan titik tiga (⋮) atau ikon browser di
+              pojok, lalu pilih &quot;Buka di Chrome&quot; atau nama browsermu.
+            </li>
+            <li>
+              Di laptop: salin alamat halaman ini, lalu tempel di browser atau profil tempat kamu
+              memintanya.
+            </li>
+          </ul>
+          <p className="mt-3">
+            Beda perangkat, atau sudah lewat beberapa menit? Minta link baru dari perangkat ini.
+          </p>
+          <Link href="/lupa-sandi" className={KELAS_TOMBOL}>
+            Minta link baru
+          </Link>
         </KotakAkun>
       );
     }
