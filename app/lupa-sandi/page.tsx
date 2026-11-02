@@ -10,7 +10,7 @@ export default function HalamanLupaSandi() {
   return (
     <KotakAkun
       judul="Lupa kata sandi"
-      deskripsi="Tulis email akunmu. Kami kirim link untuk membuat kata sandi baru."
+      deskripsi="Tulis email akunmu. Kami kirim link untuk membuat kata sandi baru. Penting: buka link itu di browser ini juga (perangkat, browser, dan profil yang sama, bukan jendela Samaran), karena link hanya berfungsi di tempat kamu memintanya."
       bawah={
         <p>
           Sudah ingat?{" "}
