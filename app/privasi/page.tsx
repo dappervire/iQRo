@@ -20,7 +20,7 @@ export default function HalamanPrivasi() {
     <main className="mx-auto max-w-5xl px-4 py-6 lg:pb-10">
       <article className="max-w-prose rounded-md bg-permukaan p-5 sm:p-8">
         <h1 className="text-2xl font-bold tracking-tight">Kebijakan Privasi</h1>
-        <p className="mt-2 text-sm text-teks-redup">Diperbarui 30 Oktober 2026</p>
+        <p className="mt-2 text-sm text-teks-redup">Diperbarui 10 November 2026</p>
         <p className="mt-6 text-pretty">
           iQRo menyimpan data sesedikit mungkin. Halaman ini menjelaskan apa saja yang disimpan,
           untuk apa, dan di mana.
@@ -76,6 +76,23 @@ export default function HalamanPrivasi() {
           </p>
         </Bagian>
 
+        <Bagian judul="Halaman toko">
+          <ul className="list-disc space-y-2 pl-5">
+            <li>
+              Kami menyimpan isi halaman toko yang kamu buat: nama, alamat halaman, deskripsi, warna,
+              nomor WhatsApp dan pesan pembuka (kalau diisi), serta tombol link. Semua itu memang
+              ditampilkan untuk umum di halaman tokomu.
+            </li>
+            <li>
+              Link tombol diperiksa Google Safe Browsing saat disimpan, sama seperti link pendek.
+            </li>
+            <li>
+              Saat halaman toko dibuka, kami hanya menambah satu angka (jumlah kunjungan). Tidak ada
+              data pengunjung yang disimpan, termasuk alamat IP.
+            </li>
+          </ul>
+        </Bagian>
+
         <Bagian judul="Cookie dan penyimpanan di browser">
           <ul className="list-disc space-y-2 pl-5">
             <li>Cookie login, supaya kamu tetap masuk. Hilang saat kamu menekan Keluar.</li>
@@ -100,8 +117,8 @@ export default function HalamanPrivasi() {
         <Bagian judul="Menghapus akun">
           <p>
             Kamu bisa menghapus akunmu sendiri kapan saja lewat tombol Hapus akun di Dasbor.
-            Akunmu, semua link pendekmu, dan statistik kliknya langsung terhapus permanen dan tidak
-            bisa dikembalikan.
+            Akunmu, semua link pendekmu, statistik kliknya, dan halaman tokomu langsung terhapus
+            permanen dan tidak bisa dikembalikan.
           </p>
         </Bagian>
       </article>

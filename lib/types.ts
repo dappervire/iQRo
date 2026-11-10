@@ -165,6 +165,53 @@ export type HasilUbahLink =
   | { status: "galat"; pesan: string }
   | { status: "berhasil" };
 
+// --- Halaman toko / link-in-bio (v3, M14) ---
+
+// Satu tombol link di halaman toko. url sudah lewat normalisasiUrl (http/https saja).
+export type TombolToko = {
+  label: string;
+  url: string;
+};
+
+// Isi halaman toko yang ditampilkan (halaman publik dan preview di form).
+// waUrl = link wa.me siap pakai, null = tanpa tombol WhatsApp.
+export type IsiToko = {
+  nama: string;
+  deskripsi: string;
+  warna: string; // "#E8481C"
+  waUrl: string | null;
+  tombol: TombolToko[];
+};
+
+// Isi form /dasbor/toko persis seperti di kolom (belum dicek).
+export type IsianToko = {
+  namaUrl: string;
+  nama: string;
+  deskripsi: string;
+  warna: string;
+  waNomor: string;
+  waPesan: string;
+  tombol: TombolToko[];
+};
+
+// Halaman toko milik user yang sedang masuk (dasbor).
+export type TokoSaya = {
+  id: string;
+  namaUrl: string;
+  isian: IsianToko;
+  jumlahKunjungan: number;
+  aktif: boolean;
+  alasan: string | null; // alasan admin menonaktifkan
+};
+
+export type KolomToko = "namaUrl" | "nama" | "deskripsi" | "warna" | "waNomor" | "waPesan" | "tombol";
+
+// indeks = urutan tombol link yang salah (0 = tombol pertama), hanya untuk kolom "tombol".
+export type HasilSimpanToko =
+  | { status: "awal" }
+  | { status: "galat"; pesan: string; kolom: KolomToko | null; indeks: number | null }
+  | { status: "berhasil"; alamat: string; baru: boolean };
+
 // --- Analitik (v2) ---
 
 export type Perangkat = "hp" | "tablet" | "komputer" | "lainnya";

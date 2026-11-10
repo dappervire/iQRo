@@ -18,23 +18,34 @@ export function alasanBenar(nilai: string): nilai is AlasanLaporan {
   return ALASAN_LAPORAN.some((a) => a.id === nilai);
 }
 
-// Ambil slug dari yang diketik pelapor: "abc1234", "/abc1234", "iqro-alpha.vercel.app/abc1234",
-// atau link lengkap "https://iqro-alpha.vercel.app/abc1234?x=1". null = bukan link pendek iQRo.
+// Yang dilaporkan: link pendek (slug) atau halaman toko (nama di /toko/<nama>).
+export type SasaranLaporan = { jenis: "link"; slug: string } | { jenis: "toko"; nama: string };
+
+// Baca yang diketik pelapor: "abc1234", "/abc1234", "iqro-alpha.vercel.app/abc1234",
+// "https://iqro-alpha.vercel.app/abc1234?x=1", "toko/kopi-senja", atau
+// "iqro-alpha.vercel.app/toko/kopi-senja". null = bukan link iQRo.
 // hostIqro = domain iQRo yang diterima, mis. ["iqro-alpha.vercel.app", "localhost:3000"].
-export function slugDariMasukan(masukan: string, hostIqro: string[]): string | null {
+export function sasaranDariMasukan(masukan: string, hostIqro: string[]): SasaranLaporan | null {
   const teks = masukan.trim().replace(/^\/+/, "");
   if (teks === "") return null;
 
-  let slug = teks;
-  if (teks.includes("/")) {
+  let bagian = [teks];
+  if (/^toko\//i.test(teks)) {
+    bagian = teks.split(/[/?#]/);
+  } else if (teks.includes("/")) {
     try {
       const url = new URL(/^https?:\/\//i.test(teks) ? teks : `https://${teks}`);
       if (!hostIqro.includes(url.host.toLowerCase())) return null;
-      slug = url.pathname.split("/")[1] ?? "";
+      bagian = url.pathname.split("/").slice(1);
     } catch {
       return null;
     }
   }
-  slug = rapikanSlug(slug);
-  return formatSlugBenar(slug) ? slug : null;
+
+  if (rapikanSlug(bagian[0] ?? "") === "toko") {
+    const nama = rapikanSlug(bagian[1] ?? "");
+    return formatSlugBenar(nama) ? { jenis: "toko", nama } : null;
+  }
+  const slug = rapikanSlug(bagian[0] ?? "");
+  return formatSlugBenar(slug) ? { jenis: "link", slug } : null;
 }

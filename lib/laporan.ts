@@ -7,7 +7,7 @@ import { DOMAIN_UTAMA, alamatSitus } from "./situs";
 import { buatKlienAdmin } from "./supabase/admin";
 import { sidikIp } from "./tamu";
 import type { HasilLaporan, KolomLaporan } from "./types";
-import { KETERANGAN_MAKS, LINK_MAKS, alasanBenar, slugDariMasukan } from "./validasi-laporan";
+import { KETERANGAN_MAKS, LINK_MAKS, alasanBenar, sasaranDariMasukan } from "./validasi-laporan";
 
 function ambilTeks(form: FormData, nama: string): string {
   const nilai = form.get(nama);
@@ -23,12 +23,12 @@ export async function kirimLaporan(_sebelum: HasilLaporan, form: FormData): Prom
   const alasan = ambilTeks(form, "alasan");
   const keterangan = ambilTeks(form, "keterangan").trim();
 
-  if (link.trim() === "") return galat("Isi link pendek yang mau dilaporkan.", "link");
+  if (link.trim() === "") return galat("Isi link yang mau dilaporkan.", "link");
   const hostSitus = new URL(await alamatSitus()).host;
-  const slug = slugDariMasukan(link, [DOMAIN_UTAMA, hostSitus]);
-  if (!slug) {
+  const sasaran = sasaranDariMasukan(link, [DOMAIN_UTAMA, hostSitus]);
+  if (!sasaran) {
     return galat(
-      `Ini bukan link pendek iQRo. Contoh yang benar: ${DOMAIN_UTAMA}/abc1234`,
+      `Ini bukan link iQRo. Contoh yang benar: ${DOMAIN_UTAMA}/abc1234 atau ${DOMAIN_UTAMA}/toko/nama-toko`,
       "link",
     );
   }
@@ -37,14 +37,14 @@ export async function kirimLaporan(_sebelum: HasilLaporan, form: FormData): Prom
     return galat(`Keterangan maksimal ${KETERANGAN_MAKS} karakter.`, "keterangan");
   }
 
-  const { error } = await buatKlienAdmin().rpc("kirim_laporan", {
-    p_slug: slug,
-    p_alasan: alasan,
-    p_keterangan: keterangan,
-    p_ip_hash: await sidikIp(),
-  });
+  const isi = { p_alasan: alasan, p_keterangan: keterangan, p_ip_hash: await sidikIp() };
+  const { error } =
+    sasaran.jenis === "toko"
+      ? await buatKlienAdmin().rpc("kirim_laporan_toko", { p_nama: sasaran.nama, ...isi })
+      : await buatKlienAdmin().rpc("kirim_laporan", { p_slug: sasaran.slug, ...isi });
   if (error?.message.includes("tidak_ada")) {
-    return galat("Link pendek ini tidak ditemukan di iQRo. Cek lagi ejaannya.", "link");
+    const apa = sasaran.jenis === "toko" ? "Halaman toko" : "Link pendek";
+    return galat(`${apa} ini tidak ditemukan di iQRo. Cek lagi ejaannya.`, "link");
   }
   if (error?.message.includes("batas_laporan")) {
     return galat("Kamu sudah mengirim 10 laporan hari ini. Terima kasih! Coba lagi besok.", null);
