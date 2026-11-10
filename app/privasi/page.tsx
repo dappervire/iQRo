@@ -40,6 +40,12 @@ export default function HalamanPrivasi() {
             bentuk acak (hash), jadi kami pun tidak bisa membacanya. Email hanya dipakai untuk
             masuk, verifikasi, dan mengganti kata sandi; tidak untuk iklan.
           </p>
+          <p>
+            Kalau kamu memakai &ldquo;Lanjutkan dengan Google&rdquo;, Google mengirim nama, alamat
+            email, dan foto profilmu ke sistem login kami. iQRo hanya memakai alamat email; nama dan
+            foto tidak ditampilkan atau dipakai untuk apa pun. Kata sandi Google-mu tidak pernah kami
+            terima.
+          </p>
         </Bagian>
 
         <Bagian judul="Link pendek">
@@ -87,6 +93,7 @@ export default function HalamanPrivasi() {
             <li>Supabase: database dan sistem login, server di Singapura.</li>
             <li>Vercel: tempat situs ini berjalan.</li>
             <li>Google Safe Browsing: pemeriksa link berbahaya.</li>
+            <li>Google (Masuk dengan Google): pilihan masuk tanpa kata sandi, kalau kamu memakainya.</li>
           </ul>
         </Bagian>
 
