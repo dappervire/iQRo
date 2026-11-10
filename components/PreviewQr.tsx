@@ -69,7 +69,7 @@ export default function PreviewQr({ state, data }: Props) {
         </div>
         {!data && (
           <div className="absolute inset-0 flex items-center justify-center rounded-md bg-latar p-6 text-center text-sm text-teks-redup">
-            QR muncul di sini setelah kamu menempel link.
+            QR muncul di sini setelah kamu mengisi link atau nomor WhatsApp.
           </div>
         )}
         {data && <TandaPotong />}

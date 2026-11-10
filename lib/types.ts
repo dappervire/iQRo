@@ -1,14 +1,20 @@
 export type TemplateId = "stiker" | "poster" | "kartu";
 
+// Isi QR: link biasa, atau chat WhatsApp (v3, M13).
+export type JenisQr = "link" | "wa";
+
 export type Logo = {
   dataUrl: string;
   nama: string;
 };
 
 export type State = {
+  jenis: JenisQr;
   url: string;
   urlError: string | null;
   urlPeringatan: string | null;
+  waNomor: string; // persis seperti diketik, mis. "0812-3456-7890"
+  waPesan: string; // pesan pembuka opsional, maks 300 karakter
   warnaQr: string;
   warnaLatar: string;
   logo: Logo | null;
@@ -21,7 +27,10 @@ export type State = {
 };
 
 export type Aksi =
+  | { type: "pilihJenis"; jenis: JenisQr }
   | { type: "ubahUrl"; url: string }
+  | { type: "ubahWaNomor"; nomor: string }
+  | { type: "ubahWaPesan"; pesan: string }
   | { type: "ubahWarnaQr"; warna: string }
   | { type: "ubahWarnaLatar"; warna: string }
   | { type: "tukarWarna" }
@@ -75,6 +84,16 @@ export type CekWarna = {
 export type HasilUrl =
   | { ok: true; url: string; peringatan: string | null }
   | { ok: false; error: string | null };
+
+// --- QR WhatsApp (v3) ---
+
+// nomor = hanya angka dengan kode negara, mis. "6281234567890". error null = kolom masih kosong.
+export type HasilNomorWa = { ok: true; nomor: string } | { ok: false; error: string | null };
+
+// kolom = tempat pesan galat ditampilkan (di bawah kolom nomor atau kolom pesan).
+export type HasilWa =
+  | { ok: true; url: string; nomor: string; peringatan: string | null }
+  | { ok: false; kolom: "nomor" | "pesan"; error: string | null };
 
 // --- Akun (v2) ---
 

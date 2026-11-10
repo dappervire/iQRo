@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { reducer, stateAwal } from "@/lib/state";
 import type { Aksi } from "@/lib/types";
 import { normalisasiUrl } from "@/lib/validasi";
+import { periksaWa } from "@/lib/whatsapp";
 import GayaQr from "./GayaQr";
 import LangkahLink from "./LangkahLink";
 import PilihTemplate from "./PilihTemplate";
@@ -39,7 +40,10 @@ function IsiDariAlamat({ dispatch }: { dispatch: Dispatch<Aksi> }) {
 
 export default function Iqro() {
   const [state, dispatch] = useReducer(reducer, stateAwal);
-  const hasil = normalisasiUrl(state.url);
+  // Isi QR tergantung jenis yang dipilih; dua-duanya dihitung di browser, tanpa server.
+  const hasilLink = normalisasiUrl(state.url);
+  const hasilWa = periksaWa(state.waNomor, state.waPesan);
+  const hasil = state.jenis === "wa" ? hasilWa : hasilLink;
   const dataQr = hasil.ok ? hasil.url : null;
 
   return (
@@ -56,10 +60,17 @@ export default function Iqro() {
         <div className="space-y-4">
           <Langkah judul="Link">
             <LangkahLink
+              jenis={state.jenis}
               url={state.url}
               error={state.urlError}
               peringatan={state.urlPeringatan}
+              waNomor={state.waNomor}
+              waPesan={state.waPesan}
+              hasilWa={hasilWa}
+              onPilihJenis={(jenis) => dispatch({ type: "pilihJenis", jenis })}
               onUbah={(url) => dispatch({ type: "ubahUrl", url })}
+              onUbahWaNomor={(nomor) => dispatch({ type: "ubahWaNomor", nomor })}
+              onUbahWaPesan={(pesan) => dispatch({ type: "ubahWaPesan", pesan })}
             />
           </Langkah>
 
