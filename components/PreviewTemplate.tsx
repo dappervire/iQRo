@@ -101,7 +101,7 @@ export default function PreviewTemplate({ state, data }: Props) {
       )}
       {!data && (
         <p className="mt-2 text-center text-xs text-teks-redup">
-          Kotak abu-abu akan terisi QR setelah link diisi.
+          Kotak abu-abu akan terisi QR setelah link atau nomor WhatsApp diisi.
         </p>
       )}
     </figure>

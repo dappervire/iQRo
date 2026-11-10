@@ -1,14 +1,20 @@
 export type TemplateId = "stiker" | "poster" | "kartu";
 
+// Isi QR: link biasa, atau chat WhatsApp (v3, M13).
+export type JenisQr = "link" | "wa";
+
 export type Logo = {
   dataUrl: string;
   nama: string;
 };
 
 export type State = {
+  jenis: JenisQr;
   url: string;
   urlError: string | null;
   urlPeringatan: string | null;
+  waNomor: string; // persis seperti diketik, mis. "0812-3456-7890"
+  waPesan: string; // pesan pembuka opsional, maks 300 karakter
   warnaQr: string;
   warnaLatar: string;
   logo: Logo | null;
@@ -21,7 +27,10 @@ export type State = {
 };
 
 export type Aksi =
+  | { type: "pilihJenis"; jenis: JenisQr }
   | { type: "ubahUrl"; url: string }
+  | { type: "ubahWaNomor"; nomor: string }
+  | { type: "ubahWaPesan"; pesan: string }
   | { type: "ubahWarnaQr"; warna: string }
   | { type: "ubahWarnaLatar"; warna: string }
   | { type: "tukarWarna" }
@@ -75,6 +84,16 @@ export type CekWarna = {
 export type HasilUrl =
   | { ok: true; url: string; peringatan: string | null }
   | { ok: false; error: string | null };
+
+// --- QR WhatsApp (v3) ---
+
+// nomor = hanya angka dengan kode negara, mis. "6281234567890". error null = kolom masih kosong.
+export type HasilNomorWa = { ok: true; nomor: string } | { ok: false; error: string | null };
+
+// kolom = tempat pesan galat ditampilkan (di bawah kolom nomor atau kolom pesan).
+export type HasilWa =
+  | { ok: true; url: string; nomor: string; peringatan: string | null }
+  | { ok: false; kolom: "nomor" | "pesan"; error: string | null };
 
 // --- Akun (v2) ---
 
@@ -145,6 +164,53 @@ export type HasilUbahLink =
   | { status: "awal" }
   | { status: "galat"; pesan: string }
   | { status: "berhasil" };
+
+// --- Halaman toko / link-in-bio (v3, M14) ---
+
+// Satu tombol link di halaman toko. url sudah lewat normalisasiUrl (http/https saja).
+export type TombolToko = {
+  label: string;
+  url: string;
+};
+
+// Isi halaman toko yang ditampilkan (halaman publik dan preview di form).
+// waUrl = link wa.me siap pakai, null = tanpa tombol WhatsApp.
+export type IsiToko = {
+  nama: string;
+  deskripsi: string;
+  warna: string; // "#E8481C"
+  waUrl: string | null;
+  tombol: TombolToko[];
+};
+
+// Isi form /dasbor/toko persis seperti di kolom (belum dicek).
+export type IsianToko = {
+  namaUrl: string;
+  nama: string;
+  deskripsi: string;
+  warna: string;
+  waNomor: string;
+  waPesan: string;
+  tombol: TombolToko[];
+};
+
+// Halaman toko milik user yang sedang masuk (dasbor).
+export type TokoSaya = {
+  id: string;
+  namaUrl: string;
+  isian: IsianToko;
+  jumlahKunjungan: number;
+  aktif: boolean;
+  alasan: string | null; // alasan admin menonaktifkan
+};
+
+export type KolomToko = "namaUrl" | "nama" | "deskripsi" | "warna" | "waNomor" | "waPesan" | "tombol";
+
+// indeks = urutan tombol link yang salah (0 = tombol pertama), hanya untuk kolom "tombol".
+export type HasilSimpanToko =
+  | { status: "awal" }
+  | { status: "galat"; pesan: string; kolom: KolomToko | null; indeks: number | null }
+  | { status: "berhasil"; alamat: string; baru: boolean };
 
 // --- Analitik (v2) ---
 

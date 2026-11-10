@@ -101,7 +101,8 @@ export default function KartuLink({ link, asal }: Props) {
   );
 }
 
-function TombolSalin({ teks }: { teks: string }) {
+// Dipakai juga KartuToko (halaman toko di dasbor).
+export function TombolSalin({ teks }: { teks: string }) {
   const [status, setStatus] = useState<"siap" | "tersalin" | "gagal">("siap");
 
   async function salin() {

@@ -56,7 +56,7 @@ function IsiForm({ domain, onBaru }: Props & { onBaru: () => void }) {
     <form action={kirim} noValidate className="space-y-6">
       <div>
         <label htmlFor="link" className="mb-1.5 block text-sm font-medium">
-          Link pendek yang mencurigakan
+          Link pendek atau halaman toko yang mencurigakan
         </label>
         <input
           id="link"

@@ -9,7 +9,7 @@ import { refresh } from "next/cache";
 import { ambilPengguna } from "./auth";
 import { formatIdBenar, formatTanggal } from "./dasbor";
 import { tokenBenar } from "./klaim";
-import { cekSafeBrowsing } from "./safe-browsing";
+import { periksaKeamanan } from "./periksa-link";
 import { DOMAIN_UTAMA, alamatSitus } from "./situs";
 import { rapikanSlug, slugOtomatis, validasiSlug } from "./slug";
 import { buatKlienAdmin } from "./supabase/admin";
@@ -56,16 +56,6 @@ async function periksaTujuan(
     return { ok: false, pesan: "Ini sudah link iQRo. Masukkan link tujuan aslinya." };
   }
   return { ok: true, url: hasilUrl.url, asal: situs.origin };
-}
-
-// Cek Google Safe Browsing. null = aman. Kalau pemeriksaan gagal, link TIDAK dibuat (lebih aman).
-async function periksaKeamanan(url: string): Promise<string | null> {
-  const hasil = await cekSafeBrowsing(url);
-  if (hasil === "berbahaya") {
-    return "Link ini ditandai berbahaya oleh Google Safe Browsing (penipuan atau virus), jadi tidak bisa dipakai.";
-  }
-  if (hasil === "gagal") return "Keamanan link belum bisa diperiksa sekarang. Coba lagi sebentar lagi.";
-  return null;
 }
 
 // id link dari form, hanya kalau bentuknya benar-benar uuid.

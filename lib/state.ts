@@ -2,11 +2,15 @@ import type { Aksi, State } from "./types";
 import { UKURAN_LOGO_MAKS, UKURAN_LOGO_MIN } from "./logo";
 import { PANJANG_JUDUL_MAKS, PANJANG_SUBJUDUL_MAKS } from "./template";
 import { normalisasiUrl } from "./validasi";
+import { PANJANG_PESAN_WA_MAKS } from "./whatsapp";
 
 export const stateAwal: State = {
+  jenis: "link",
   url: "",
   urlError: null,
   urlPeringatan: null,
+  waNomor: "",
+  waPesan: "",
   warnaQr: "#111111",
   warnaLatar: "#ffffff",
   logo: null,
@@ -20,6 +24,13 @@ export const stateAwal: State = {
 
 export function reducer(state: State, aksi: Aksi): State {
   switch (aksi.type) {
+    // Hanya ganti jenis; isian jenis lain tetap disimpan supaya tidak hilang saat pindah bolak-balik.
+    case "pilihJenis":
+      return { ...state, jenis: aksi.jenis };
+    case "ubahWaNomor":
+      return { ...state, waNomor: aksi.nomor };
+    case "ubahWaPesan":
+      return { ...state, waPesan: aksi.pesan.slice(0, PANJANG_PESAN_WA_MAKS) };
     case "ubahUrl": {
       const hasil = normalisasiUrl(aksi.url);
       return {

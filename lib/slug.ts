@@ -28,6 +28,7 @@ const KATA_TERLARANG = new Set([
   "sandi-baru",
   "link-tidak-aktif",
   "akun-dihapus",
+  "toko",
   "keluar",
   "akun",
   "admin",
@@ -62,13 +63,16 @@ export function formatSlugBenar(slug: string): boolean {
 }
 
 // null = boleh dipakai. Slug sudah dipakai orang lain dicek database (constraint unique).
-export function validasiSlug(slug: string): string | null {
-  if (slug.length < SLUG_MIN) return `Nama link minimal ${SLUG_MIN} karakter.`;
-  if (slug.length > SLUG_MAKS) return `Nama link maksimal ${SLUG_MAKS} karakter.`;
+// "sebutan" = nama kolom di pesan galat; halaman toko (M14) memakai aturan yang sama.
+export function validasiSlug(slug: string, sebutan = "Nama link"): string | null {
+  if (slug.length < SLUG_MIN) return `${sebutan} minimal ${SLUG_MIN} karakter.`;
+  if (slug.length > SLUG_MAKS) return `${sebutan} maksimal ${SLUG_MAKS} karakter.`;
   if (!/^[a-z0-9-]+$/.test(slug)) {
-    return "Nama link hanya boleh huruf a–z, angka 0–9, dan tanda minus (-).";
+    return `${sebutan} hanya boleh huruf a–z, angka 0–9, dan tanda minus (-).`;
   }
-  if (!POLA_SLUG.test(slug)) return "Nama link tidak boleh diawali atau diakhiri tanda minus (-).";
+  if (!POLA_SLUG.test(slug)) {
+    return `${sebutan} tidak boleh diawali atau diakhiri tanda minus (-).`;
+  }
   if (KATA_TERLARANG.has(slug)) return `"${slug}" dipakai iQRo sendiri. Coba nama lain.`;
   return null;
 }

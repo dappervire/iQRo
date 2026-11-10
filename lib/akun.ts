@@ -73,6 +73,36 @@ export async function daftar(_sebelum: HasilAksiAkun, form: FormData): Promise<H
   };
 }
 
+// Tombol "Lanjutkan dengan Google" (masuk sekaligus daftar). Supabase membuat alamat ke halaman
+// Google, lalu browser dialihkan ke sana. Setelah memilih akun, Google → Supabase → /auth/callback.
+export async function masukGoogle(
+  _sebelum: HasilAksiAkun,
+  form: FormData,
+): Promise<HasilAksiAkun> {
+  const balik = new URL(`${await alamatSitus()}/auth/callback`);
+  balik.searchParams.set("lanjut", jalurAman(ambilTeks(form, "lanjut")));
+
+  const supabase = await buatKlienServer();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: balik.toString(),
+      // Selalu tampilkan pilihan akun Google, penting di HP/laptop yang dipakai bersama.
+      queryParams: { prompt: "select_account" },
+    },
+  });
+  if (error || !data.url) {
+    console.error("masukGoogle:", error?.code, error?.message);
+    return {
+      status: "galat",
+      pesan: "Masuk dengan Google sedang bermasalah. Coba lagi sebentar, atau pakai email.",
+      email: "",
+    };
+  }
+
+  redirect(data.url);
+}
+
 const JENIS_KONFIRMASI: EmailOtpType[] = ["email", "signup", "recovery"];
 
 // Dipanggil dari tombol di /auth/confirm, BUKAN langsung saat link email dibuka:

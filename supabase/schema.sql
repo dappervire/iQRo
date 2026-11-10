@@ -481,3 +481,172 @@ $$;
 
 revoke execute on function public.bersihkan_harian() from public, anon, authenticated;
 grant execute on function public.bersihkan_harian() to service_role;
+
+-- ============================================================
+-- M14: halaman toko (link-in-bio), alamat /toko/<nama_url>
+-- ============================================================
+
+-- Satu akun = satu halaman (pemilik_id unik). Aturan sama dengan lib/validasi-toko.ts.
+create table if not exists public.toko (
+  id uuid primary key default gen_random_uuid(),
+  -- Akun dihapus → halaman tokonya ikut terhapus.
+  pemilik_id uuid not null unique default auth.uid() references auth.users (id) on delete cascade,
+  -- Format sama dengan slug link pendek: 3–32 karakter a-z 0-9 -, tidak diawali/diakhiri "-".
+  nama_url text not null unique
+    constraint toko_nama_url_format check (nama_url ~ '^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$'),
+  nama text not null
+    constraint toko_nama_panjang check (char_length(btrim(nama)) between 1 and 40),
+  deskripsi text constraint toko_deskripsi_panjang check (char_length(deskripsi) <= 160),
+  warna text not null default '#E8481C'
+    constraint toko_warna_format check (warna ~ '^#[0-9A-Fa-f]{6}$'),
+  -- Nomor WhatsApp hanya angka dengan kode negara, mis. 6281234567890. null = tanpa tombol WhatsApp.
+  wa_nomor text constraint toko_wa_nomor_format check (wa_nomor ~ '^[1-9][0-9]{9,14}$'),
+  wa_pesan text constraint toko_wa_pesan_panjang check (char_length(wa_pesan) <= 300),
+  -- Daftar tombol [{label, url}], maksimal 8. Isi tiap tombol dicek server (lib/toko.ts).
+  tombol jsonb not null default '[]'::jsonb
+    constraint toko_tombol_format check (
+      case when jsonb_typeof(tombol) = 'array'
+        then jsonb_array_length(tombol) <= 8 and octet_length(tombol::text) <= 8000
+        else false
+      end
+    ),
+  -- Hanya satu angka, tanpa data pengunjung apa pun.
+  jumlah_kunjungan bigint not null default 0,
+  dibuat timestamptz not null default now(),
+  diubah timestamptz not null default now(),
+  -- Diisi Fatih lewat Table Editor kalau halaman dilaporkan dan terbukti berbahaya.
+  dinonaktifkan boolean not null default false,
+  alasan text
+);
+
+alter table public.toko enable row level security;
+
+revoke all on public.toko from anon, authenticated;
+-- User hanya boleh membaca dan menghapus miliknya sendiri. Membuat & mengubah hanya lewat
+-- server iQRo (lib/toko.ts, kunci secret), supaya cek Google Safe Browsing tidak bisa dilewati.
+grant select, delete on public.toko to authenticated;
+grant select, insert, update, delete on public.toko to service_role;
+
+drop policy if exists "toko: baca milik sendiri" on public.toko;
+create policy "toko: baca milik sendiri" on public.toko
+  for select to authenticated
+  using ((select auth.uid()) = pemilik_id);
+
+drop policy if exists "toko: hapus milik sendiri" on public.toko;
+create policy "toko: hapus milik sendiri" on public.toko
+  for delete to authenticated
+  using ((select auth.uid()) = pemilik_id);
+
+-- Kolom "diubah" diperbarui kalau isi halaman berubah (bukan kalau hanya jumlah kunjungan bertambah).
+create or replace function public.toko_isi_diubah()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if (to_jsonb(new) - 'jumlah_kunjungan' - 'diubah') is distinct from (to_jsonb(old) - 'jumlah_kunjungan' - 'diubah') then
+    new.diubah := now();
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists toko_diubah on public.toko;
+create trigger toko_diubah
+  before update on public.toko
+  for each row execute function public.toko_isi_diubah();
+
+-- Fungsi publik untuk halaman /toko/[nama]. Pengunjung tidak login, jadi tidak bisa membaca tabel.
+-- Hanya kolom yang tampil di halaman, tanpa data pemilik. Halaman nonaktif: hanya id + aktif = false
+-- (isinya tidak dibagikan lagi).
+create or replace function public.cari_toko(p_nama text)
+returns table (
+  id uuid,
+  nama text,
+  deskripsi text,
+  warna text,
+  wa_nomor text,
+  wa_pesan text,
+  tombol jsonb,
+  aktif boolean
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select
+    t.id,
+    case when not t.dinonaktifkan then t.nama end,
+    case when not t.dinonaktifkan then t.deskripsi end,
+    case when not t.dinonaktifkan then t.warna end,
+    case when not t.dinonaktifkan then t.wa_nomor end,
+    case when not t.dinonaktifkan then t.wa_pesan end,
+    case when not t.dinonaktifkan then t.tombol end,
+    not t.dinonaktifkan
+  from public.toko t
+  where t.nama_url = p_nama;
+$$;
+
+revoke execute on function public.cari_toko(text) from public, anon, authenticated;
+grant execute on function public.cari_toko(text) to anon, authenticated;
+
+-- Dipanggil app/toko/[nama]/page.tsx SETELAH halaman terkirim (lewat after()).
+-- Bot & pratinjau link (mis. WhatsApp) tidak memanggil ini (lib/klik.ts).
+create or replace function public.catat_kunjungan_toko(p_id uuid)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.toko set jumlah_kunjungan = jumlah_kunjungan + 1
+  where id = p_id and not dinonaktifkan;
+$$;
+
+revoke execute on function public.catat_kunjungan_toko(uuid) from public, anon, authenticated;
+grant execute on function public.catat_kunjungan_toko(uuid) to anon, authenticated;
+
+-- /laporkan juga menerima halaman toko. Satu laporan = SATU sasaran: link pendek ATAU halaman toko.
+alter table public.reports alter column link_id drop not null;
+alter table public.reports
+  add column if not exists toko_id uuid references public.toko (id) on delete cascade;
+alter table public.reports drop constraint if exists reports_satu_sasaran;
+alter table public.reports
+  add constraint reports_satu_sasaran check (num_nonnulls(link_id, toko_id) = 1);
+
+-- Dipanggil lib/laporan.ts (kunci secret). Batas 10 laporan per 24 jam per IP dihitung bersama
+-- laporan link pendek (kunci antrean yang sama dengan kirim_laporan()).
+create or replace function public.kirim_laporan_toko(
+  p_nama text,
+  p_alasan text,
+  p_keterangan text,
+  p_ip_hash text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_toko_id uuid;
+begin
+  select t.id into v_toko_id from public.toko t where t.nama_url = p_nama;
+  if v_toko_id is null then
+    raise exception 'tidak_ada' using errcode = 'P0001';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended(p_ip_hash, 1));
+  if (
+    select count(*) from public.reports
+    where ip_hash = p_ip_hash and dibuat > now() - interval '24 hours'
+  ) >= 10 then
+    raise exception 'batas_laporan' using errcode = 'P0001';
+  end if;
+
+  insert into public.reports (toko_id, alasan, keterangan, ip_hash)
+  values (v_toko_id, p_alasan, nullif(p_keterangan, ''), p_ip_hash);
+end;
+$$;
+
+revoke execute on function public.kirim_laporan_toko(text, text, text, text) from public, anon, authenticated;
+grant execute on function public.kirim_laporan_toko(text, text, text, text) to service_role;

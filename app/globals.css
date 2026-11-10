@@ -83,6 +83,13 @@ body {
   color: var(--teks-di-aksen);
 }
 
+/* Halaman toko publik (/toko/[nama]) milik pemilik toko, bukan halaman iQRo:
+   header & footer situs disembunyikan; halaman itu punya footer kecilnya sendiri. */
+body:has(main[data-halaman-toko]) > header,
+body:has(main[data-halaman-toko]) > footer {
+  display: none;
+}
+
 /* Fokus keyboard selalu terlihat, dengan warna aksen. */
 :focus-visible {
   outline: 2px solid var(--aksen);

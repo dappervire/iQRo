@@ -7,9 +7,11 @@ import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
 import DaftarPeringkat from "@/components/DaftarPeringkat";
 import HapusAkun from "@/components/HapusAkun";
 import KartuLink from "@/components/KartuLink";
+import KartuToko from "@/components/KartuToko";
 import KlaimLinkTamu from "@/components/KlaimLinkTamu";
 import { KELAS_TAUTAN } from "@/components/KotakAkun";
 import { ambilPengguna } from "@/lib/auth";
+import { bacaTokoSaya } from "@/lib/data-toko";
 import {
   CARI_MAKS,
   LINK_PER_HALAMAN,
@@ -60,7 +62,7 @@ async function IsiDasbor({ searchParams }: { searchParams: ParamUrl }) {
   if (cari) kueri = kueri.or(`slug.ilike."%${cari}%",tujuan.ilike."%${cari}%"`);
   // Link terpopuler hanya di halaman 1 tanpa pencarian. Kedua kueri berjalan bersamaan.
   const tampilkanTerpopuler = cari === "" && hal === 1;
-  const [{ data, count, error }, terpopuler] = await Promise.all([
+  const [{ data, count, error }, terpopuler, hasilToko] = await Promise.all([
     kueri.order("dibuat", { ascending: false }).range(dari, dari + LINK_PER_HALAMAN - 1),
     tampilkanTerpopuler
       ? supabase
@@ -71,6 +73,7 @@ async function IsiDasbor({ searchParams }: { searchParams: ParamUrl }) {
           .order("jumlah_klik", { ascending: false })
           .limit(TERPOPULER_MAKS)
       : null,
+    bacaTokoSaya(pengguna.id),
   ]);
   if (terpopuler?.error) {
     console.error("dasbor terpopuler:", terpopuler.error.code, terpopuler.error.message);
@@ -227,8 +230,41 @@ async function IsiDasbor({ searchParams }: { searchParams: ParamUrl }) {
         )}
       </section>
 
+      <BagianToko hasil={hasilToko} asal={asal} />
       <BagianAkun pengguna={pengguna} />
     </>
+  );
+}
+
+function BagianToko({ hasil, asal }: { hasil: Awaited<ReturnType<typeof bacaTokoSaya>>; asal: string }) {
+  return (
+    <section className="mt-8" aria-labelledby="judul-toko">
+      <h2 id="judul-toko" className="text-lg font-semibold">
+        Halaman toko
+      </h2>
+      <div className="mt-3">
+        {!hasil.ok ? (
+          <div className="rounded-md bg-merah-latar p-5 text-merah">
+            <p className="font-semibold">Halaman toko belum bisa dimuat.</p>
+            <p className="mt-1 text-sm">Ada gangguan sebentar. Muat ulang halaman ini.</p>
+          </div>
+        ) : hasil.toko ? (
+          <KartuToko toko={hasil.toko} asal={asal} />
+        ) : (
+          <div className="rounded-md bg-permukaan p-5 sm:p-6">
+            <p className="font-semibold">Belum punya halaman toko</p>
+            <p className="mt-1 max-w-prose text-teks-redup">
+              Satu halaman berisi tombol WhatsApp dan semua link tokomu, untuk bio Instagram atau
+              TikTok. Alamatnya bisa dijadikan QR.
+            </p>
+            <Link href="/dasbor/toko" className={`${KELAS_TOMBOL_UTAMA} mt-5`}>
+              <Plus aria-hidden="true" className="size-4" />
+              Buat halaman toko
+            </Link>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 

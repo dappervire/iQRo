@@ -44,7 +44,8 @@ export function kodeNegara(nilai: string | null): string | null {
 }
 
 // null = jangan dicatat (bukan GET, atau bot/pratinjau).
-export function bacaKlik(headers: Headers, metode: string): DataKlik | null {
+// Pick<Headers, "get">: menerima header Route Handler maupun headers() di halaman (M14).
+export function bacaKlik(headers: Pick<Headers, "get">, metode: string): DataKlik | null {
   if (metode !== "GET") return null;
   const ua = headers.get("user-agent") ?? "";
   if (bukanManusia(ua)) return null;
